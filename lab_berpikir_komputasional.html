@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Berpikir Komputasional - Simulasi Interaktif</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"Fira Code"', 'monospace'],
+                    },
+                    colors: {
+                        ct: {
+                            decomp: '#3b82f6', // Blue for Decomposition
+                            pattern: '#ec4899', // Pink/Magenta for Pattern Recognition
+                            abstract: '#8b5cf6', // Purple for Abstraction
+                            algo: '#10b981',    // Emerald Green for Algorithm
+                            dark: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+        }
+
+        .pillar-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.25); }
+        .glow-pink { box-shadow: 0 0 20px rgba(236, 72, 153, 0.25); }
+        .glow-purple { box-shadow: 0 0 20px rgba(139, 92, 246, 0.25); }
+        .glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
+
+        .node-connector {
+            stroke-dasharray: 6;
+            animation: dash 1.5s linear infinite;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -12; }
+        }
+
+        .pulse-subtle {
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(59, 130, 246, 0.4); }
+            50% { border-color: rgba(59, 130, 246, 0.9); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col overflow-hidden">
+
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between z-20">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-emerald-500 flex items-center justify-center text-white text-xl shadow-lg">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                    LAB BERPIKIR KOMPUTASIONAL 
+                    <span class="text-[10px] bg-blue-500/20 text-blue-400 font-mono px-2 py-0.5 rounded-full border border-blue-500/30">SIMULATOR V2.5</span>
+                </h1>
+                <p class="text-xs text-slate-400">Penerapan Praktis 4 Pilar Computational Thinking dalam Kasus Nyata</p>
+            </div>
+        </div>
+
+        <!-- Pillar Status Bar -->
+        <div class="hidden md:flex items-center space-x-2 font-mono text-xs">
+            <div id="badge-decomp" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-[#3b82f6] fa-sitemap text-blue-400"></i>
+                <span>1. Dekomposisi</span>
+            </div>
+            <div id="badge-pattern" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-shapes text-pink-400"></i>
+                <span>2. Pola</span>
+            </div>
+            <div id="badge-abstract" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-[#8b5cf6] fa-filter text-purple-400"></i>
+                <span>3. Abstraksi</span>
+            </div>
+            <div id="badge-algo" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-code text-emerald-400"></i>
+                <span>4. Algoritma</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <div class="bg-slate-800/90 border border-slate-700 px-3.5 py-1.5 rounded-xl text-right">
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Skor Pemahaman</div>
+                <div id="hud-score" class="text-lg font-extrabold text-amber-400 font-mono">0 XP</div>
+            </div>
+            <button onclick="sim.openTeoriModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition">
+                <i class="fa-solid fa-book-open text-blue-400"></i> Panduan BK
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-grow flex overflow-hidden">
+        
+        <!-- Left Sidebar: Mission Selector -->
+        <aside class="w-80 bg-slate-900/90 border-r border-slate-800 p-4 flex flex-col justify-between overflow-y-auto">
+            <div class="space-y-4">
+                <div class="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>PILIH MISI SIMULASI</span>
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+
+                <div class="space-y-2.5" id="mission-list">
+                    <!-- Missions dynamically injected -->
+                </div>
+            </div>
+
+            <!-- Mini Theory Infographic Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 text-xs text-slate-300 space-y-2 mt-4">
+                <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb"></i> Mengapa Berpikir Komputasional?
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    BK bukan hanya tentang pemrograman, melainkan cara memecahkan masalah kompleks secara terstruktur dan efisien agar dapat diselesaikan manusia maupun komputer.
+                </p>
+            </div>
+        </aside>
+
+        <!-- Main Interactive Workspace -->
+        <main class="flex-grow flex flex-col bg-slate-950 overflow-hidden relative">
+            
+            <!-- Top Control Bar -->
+            <div class="bg-slate-900/60 border-b border-slate-800 px-6 py-2.5 flex items-center justify-between">
+                <div>
+                    <h2 id="active-mission-title" class="text-sm font-bold text-white flex items-center gap-2">
+                        Memuat Misi...
+                    </h2>
+                    <p id="active-mission-desc" class="text-xs text-slate-400">Pilih misi untuk memulai laboratorium simulasi.</p>
+                </div>
+
+                <!-- Step Navigator Pill -->
+                <div id="step-pills" class="flex items-center space-x-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                    <button id="step-btn-1" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 transition" onclick="sim.switchStep(1)">1. Dekomposisi</button>
+                    <button id="step-btn-2" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 transition" onclick="sim.switchStep(2)">2. Pola</button>
+                    <button id="step-btn-3" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 transition" onclick="sim.switchStep(3)">3. Abstraksi</button>
+                    <button id="step-btn-4" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 transition" onclick="sim.switchStep(4)">4. Algoritma</button>
+                </div>
+            </div>
+
+            <!-- Interactive Workspace Canvas/Area -->
+            <div id="workspace-area" class="flex-grow p-6 overflow-y-auto relative flex flex-col justify-center items-center">
+                <!-- Dynamic Content Rendered Here -->
+            </div>
+
+            <!-- Dynamic Bottom Explanation Panel -->
+            <div class="bg-slate-900 border-t border-slate-800 p-4 px-6 flex items-start justify-between gap-4">
+                <div class="flex items-start space-x-3">
+                    <div id="explanation-icon" class="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </div>
+                    <div>
+                        <div id="explanation-title" class="text-xs font-bold text-blue-400 font-mono uppercase tracking-wide">Penerapan BK</div>
+                        <div id="explanation-text" class="text-xs text-slate-300 mt-0.5 leading-relaxed max-w-4xl">
+                            Pilih langkah pilar di atas untuk mempelajari dan menyelesaikan tahapan pemecahan masalah.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 flex-shrink-0">
+                    <button id="btn-prev-step" onclick="sim.prevStep()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya
+                    </button>
+                    <button id="btn-next-step" onclick="sim.nextStep()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30">
+                        Lanjut <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-teori" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-700 max-w-3xl w-full rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Panduan Konsep Berpikir Komputasional</h3>
+                        <p class="text-xs text-slate-400">Pahami fungsi dari ke-4 pilar utama sebelum menyelesaikan simulasi.</p>
+                    </div>
+                </div>
+                <button onclick="sim.closeTeoriModal()" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Decomp -->
+                <div class="bg-slate-800/80 border border-blue-500/30 p-4 rounded-2xl space-y-2">
+                    <div class="flex items-center space-x-2 text-blue-400 font-bold text-sm font-mono">
+                        <i class="fa-solid fa-sitemap"></i>
+                        <span>1. Dekomposisi</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Memecah masalah besar yang rumit menjadi komponen-komponents kecil yang lebih mudah dikelola dan dianalisis satu per satu.
+                    </p>
+                    <div class="text-[11px] bg-slate-900/60 p-2 rounded-lg text-slate-400 border border-slate-700">
+                        <strong>Contoh Nyata:</strong> Menganalisis kemacetan kota dengan membaginya menjadi titik simpang, volume kendaraan, dan durasi lampu lalu lintas.
+                    </div>
+                </div>
+
+                <!-- Pattern -->
+                <div class="bg-slate-800/80 border border-pink-500/30 p-4 rounded-2xl space-y-2">
+                    <div class="flex items-center space-x-2 text-pink-400 font-bold text-sm font-mono">
+                        <i class="fa-solid fa-shapes"></i>
+                        <span>2. Pengenalan Pola</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Mencari kesamaan, kecenderungan, atau pola berulang di dalam data atau antar sub-masalah yang telah didekomposisi.
+                    </p>
+                    <div class="text-[11px] bg-slate-900/60 p-2 rounded-lg text-slate-400 border border-slate-700">
+                        <strong>Contoh Nyata:</strong> Menemukan bahwa kemacetan selalu melonjak pada jam 07.00 pagi dan 17.00 sore di Jalur Utama.
+                    </div>
+                </div>
+
+                <!-- Abstract -->
+                <div class="bg-slate-800/80 border border-purple-500/30 p-4 rounded-2xl space-y-2">
+                    <div class="flex items-center space-x-2 text-purple-400 font-bold text-sm font-mono">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>3. Abstraksi</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Mengeliminasi/mengabaikan rincian yang tidak relevan dan berfokus hanya pada informasi inti yang penting untuk pemecahan masalah.
+                    </p>
+                    <div class="text-[11px] bg-slate-900/60 p-2 rounded-lg text-slate-400 border border-slate-700">
+                        <strong>Contoh Nyata:</strong> Menggunakan peta skematik jalan (tanpa memperhatikan warna bangunan atau pohon di pinggir jalan).
+                    </div>
+                </div>
+
+                <!-- Algo -->
+                <div class="bg-slate-800/80 border border-emerald-500/30 p-4 rounded-2xl space-y-2">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm font-mono">
+                        <i class="fa-solid fa-code"></i>
+                        <span>4. Desain Algoritma</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Mengembangkan langkah-langkah terurut dan logis (rule-based) untuk menyelesaikan masalah secara otomatis dan terulang.
+                    </p>
+                    <div class="text-[11px] bg-slate-900/60 p-2 rounded-lg text-slate-400 border border-slate-700">
+                        <strong>Contoh Nyata:</strong> Menyusun logika IF-THEN otomatis: JIKA antrean jalan > 20 mobil MAKA durasi lampu hijau +15 detik.
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="sim.closeTeoriModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs transition">
+                SAYA PAHAM, KEMBALI KE LAB
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class RetroSoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playSuccess() {
+                this.init();
+                if (!this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
+                });
+            }
+
+            playError() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+        }
+
+        const audio = new RetroSoundEngine();
+    </script>
+
+    <script>
+        const MISSIONS_DATA = [
+            {
+                id: 'm1',
+                title: 'Misi 1: Rute Logistik Kurir Pintar',
+                icon: 'fa-truck-fast',
+                category: 'Logistik & Graf',
+                desc: 'Optimalkan rute pengiriman paket di kota dengan menerapkan 4 pilar BK.',
+                steps: {
+                    decomp: {
+                        prompt: 'DEKOMPOSISI: Pecah masalah pengiriman kota yang rumit ini menjadi 3 modul sub-masalah terpisah.',
+                        items: [
+                            { id: 'd1', title: 'Data Titik Lokasi & Alamat', category: 'input', correct: true },
+                            { id: 'd2', title: 'Jarak & Hambatan Jalan', category: 'graph', correct: true },
+                            { id: 'd3', title: 'Warna Mobil Kurir', category: 'irrelevant', correct: false },
+                            { id: 'd4', title: 'Urutan Singgah Efisien', category: 'route', correct: true },
+                            { id: 'd5', title: 'Merk Sepatu Pengemudi', category: 'irrelevant', correct: false }
+                        ]
+                    },
+                    pattern: {
+                        prompt: 'PENGENALAN POLA: Amati pola kemacetan jalan berdasarkan waktu jam sibuk.',
+                        patterns: [
+                            { time: '07.00 - 09.00', status: 'Macet Parah di Jalur Utama (Pusat Kota)', icon: 'fa-triangle-exclamation', color: 'text-rose-400' },
+                            { time: '12.00 - 13.00', status: 'Padat Lancar di Wilayah Sekolah', icon: 'fa-circle-info', color: 'text-amber-400' },
+                            { time: '17.00 - 19.00', status: 'Macet Parah Jalur Keluar Kota', icon: 'fa-triangle-exclamation', color: 'text-rose-400' }
+                        ],
+                        question: 'Pola apa yang teridentifikasi dari data lalu lintas di atas?',
+                        options: [
+                            { text: 'Jalur Utama selalu macet pada jam berangkat & pulang kerja.', correct: true },
+                            { text: 'Semua jalan di kota macet setiap jam secara konstan.', correct: false },
+                            { text: 'Jam sibuk hanya terjadi di malam hari saja.', correct: false }
+                        ]
+                    },
+                    abstract: {
+                        prompt: 'ABSTRAKSI: Pilih elemen informasi yang WAJIB dipakai dalam pemetaan rute terpendek dan buang informasi yang tidak relevan.',
+                        cards: [
+                            { id: 'a1', label: 'Koordinat Lokasi Penerima', essential: true, selected: false },
+                            { id: 'a2', label: 'Bobot/Jarak Antar Titik (Km)', essential: true, selected: false },
+                            { id: 'a3', label: 'Warna Cat Rumah Penerima', essential: false, selected: false },
+                            { id: 'a4', label: 'Estimasi Waktu Tempuh Ruas Jalan', essential: true, selected: false },
+                            { id: 'a5', label: 'Nama Toko di Samping Jalan', essential: false, selected: false }
+                        ]
+                    },
+                    algo: {
+                        prompt: 'DESAIN ALGORITMA: Susun urutan instruksi terstruktur untuk menentukan rute kurir.',
+                        blocks: [
+                            { id: 'b1', text: '1. Ambil daftar lokasi tujuan pengiriman paket', order: 1 },
+                            { id: 'b2', text: '2. Abaikan data warna rumah dan atribut pendukung', order: 2 },
+                            { id: 'b3', text: '3. Hitung total jarak terkecil per cabang menggunakan Dijkstra', order: 3 },
+                            { id: 'b4', text: '4. Urutkan daftar tujuan dari rute dengan total waktu terpendek', order: 4 }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'm2',
+                title: 'Misi 2: Robot Pemilah Sampah Otomatis',
+                icon: 'fa-recycle',
+                category: 'Pengenalan Citra & AI',
+                desc: 'Rancang sistem robotika pintar untuk memilah sampah Organik, Anorganik, dan B3.',
+                steps: {
+                    decomp: {
+                        prompt: 'DEKOMPOSISI: Pecah tugas pemilahan sampah otomatis menjadi sub-sistem utama.',
+                        items: [
+                            { id: 'd1', title: 'Kamera / Sensor Deteksi Sampah', category: 'sensor', correct: true },
+                            { id: 'd2', title: 'Klasifikasi Jenis Bahan Sampah', category: 'logic', correct: true },
+                            { id: 'd3', title: 'Mekanisme Lengan Robot Pendorong', category: 'actuator', correct: true },
+                            { id: 'd4', title: 'Harga Beli Tempat Sampah', category: 'irrelevant', correct: false }
+                        ]
+                    },
+                    pattern: {
+                        prompt: 'PENGENALAN POLA: Temukan kesamaan ciri-ciri fisik untuk setiap kategori sampah.',
+                        patterns: [
+                            { time: 'Organik', status: 'Bahan lunak, sisa makanan/daun, mudah terurai', icon: 'fa-leaf', color: 'text-emerald-400' },
+                            { time: 'Anorganik', status: 'Bahan plastik/kaleng/kaca, wujud padat keras', icon: 'fa-bottle-water', color: 'text-blue-400' },
+                            { time: 'Bahan B3', status: 'Baterai/elektronik/obat, beracun & berbahaya', icon: 'fa-skull-crossbones', color: 'text-rose-400' }
+                        ],
+                        question: 'Pola ciri fisik apa yang membedakan botol plastik dengan daun kering?',
+                        options: [
+                            { text: 'Anorganik bertekstur keras/plastik, Organik mudah membusuk/lunak.', correct: true },
+                            { text: 'Kedua jenis sampah memiliki sifat kimia yang persis sama.', correct: false },
+                            { text: 'Ukuran sampah selalu menentukan kategorinya.', correct: false }
+                        ]
+                    },
+                    abstract: {
+                        prompt: 'ABSTRAKSI: Pilih fitur sensorik utama yang digunakan untuk pengenalan gambar cepat.',
+                        cards: [
+                            { id: 'a1', label: 'Bentuk Geometris Citra', essential: true, selected: false },
+                            { id: 'a2', label: 'Tingkat Kekeruhan Material / Sensor Logam', essential: true, selected: false },
+                            { id: 'a3', label: 'Merk Pabrik Pembuat Sampah', essential: false, selected: false },
+                            { id: 'a4', label: 'Merek Stiker Pada Kemasan', essential: false, selected: false },
+                            { id: 'a5', label: 'Berat Massa Benda (Gram)', essential: true, selected: false }
+                        ]
+                    },
+                    algo: {
+                        prompt: 'DESAIN ALGORITMA: Susun percabangan keputusan (IF-ELSE) untuk memilah sampah.',
+                        blocks: [
+                            { id: 'b1', text: '1. JIKA sensor logam mendeteksi Baterai ➔ Dorong ke Briket B3', order: 1 },
+                            { id: 'b2', text: '2. JIKA bahan terdeteksi Kaca/Plastik ➔ Dorong ke Bin Anorganik', order: 2 },
+                            { id: 'b3', text: '3. JIKA bahan terdeteksi Sisa Makanan/Daun ➔ Dorong ke Bin Organik', order: 3 },
+                            { id: 'b4', text: '4. Reset lengan robot ke posisi awal untuk benda berikutnya', order: 4 }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'm3',
+                title: 'Misi 3: Lampu Lalu Lintas Cerdas (Smart Traffic)',
+                icon: 'fa-traffic-light',
+                category: 'IoT & Smart City',
+                desc: 'Atur durasi sinyal lalu lintas secara adaptif berdasarkan tingkat kepadatan jalan.',
+                steps: {
+                    decomp: {
+                        prompt: 'DEKOMPOSISI: Identifikasi komponen sistem lalu lintas cerdas di persimpangan.',
+                        items: [
+                            { id: 'd1', title: 'Sensor Kamera Penghitung Mobil', category: 'sensor', correct: true },
+                            { id: 'd2', title: 'Timer Durasi Lampu Merah/Hijau', category: 'timer', correct: true },
+                            { id: 'd3', title: 'Model HP Pengendara Mobil', category: 'irrelevant', correct: false },
+                            { id: 'd4', title: 'Prioritas Kendaraan Darurat (Ambulans)', category: 'priority', correct: true }
+                        ]
+                    },
+                    pattern: {
+                        prompt: 'PENGENALAN POLA: Pelajari hubungan panjang antrean mobil dengan waktu penumpukan.',
+                        patterns: [
+                            { time: 'Antrean > 25 Mobil', status: 'Kepadatan Tinggi (Membutuhkan Lampu Hijau Lebih Lama)', icon: 'fa-car-burst', color: 'text-rose-400' },
+                            { time: 'Antrean 5 - 10 Mobil', status: 'Kepadatan Normal (Durasi Standar)', icon: 'fa-car', color: 'text-amber-400' },
+                            { time: 'Terdapat Ambulans', status: 'Kondisi Darurat (Wajib Lampu Hijau Instan)', icon: 'fa-truck-medical', color: 'text-emerald-400' }
+                        ],
+                        question: 'Apa tindakan paling efisien saat sensor mendeteksi Ambulans mendekat?',
+                        options: [
+                            { text: 'Segera ubah jalur ambulans menjadi Hijau dan pangkas durasi jalur lain.', correct: true },
+                            { text: 'Biarkan jadwal timer otomatis berjalan biasa tanpa perubahan.', correct: false },
+                            { text: 'Matikan semua lampu lalu lintas di persimpangan.', correct: false }
+                        ]
+                    },
+                    abstract: {
+                        prompt: 'ABSTRAKSI: Ambil parameter penting untuk kalkulator timer lalu lintas.',
+                        cards: [
+                            { id: 'a1', label: 'Jumlah Kendaraan Terdeteksi di Ruas Jalan', essential: true, selected: false },
+                            { id: 'a2', label: 'Status Sinyal Darurat Siren Ambulans', essential: true, selected: false },
+                            { id: 'a3', label: 'Jenis Musik yang Diputar di Dalam Mobil', essential: false, selected: false },
+                            { id: 'a4', label: 'Kecepatan Rata-Rata Arus Lalu Lintas', essential: true, selected: false },
+                            { id: 'a5', label: 'Jumlah Penumpang di Tiap Bus', essential: false, selected: false }
+                        ]
+                    },
+                    algo: {
+                        prompt: 'DESAIN ALGORITMA: Susun logika otomatisasi pengatur waktu persimpangan.',
+                        blocks: [
+                            { id: 'b1', text: '1. Pindai jumlah kendaraan di 4 jalur menggunakan kamera', order: 1 },
+                            { id: 'b2', text: '2. JIKA ada Siren Darurat ➔ Berikan Lampu Hijau Prioritas Utama', order: 2 },
+                            { id: 'b3', text: '3. JIKA Antrean Jalur A > 20 Mobil ➔ Set Waktu Hijau = 45 Detik', order: 3 },
+                            { id: 'b4', text: '4. JIKA Antrean Jalur A < 5 Mobil ➔ Set Waktu Hijau = 15 Detik', order: 4 }
+                        ]
+                    }
+                }
+            }
+        ];
+
+        class CTSimulatorApp {
+            constructor() {
+                this.activeMissionIdx = 0;
+                this.activeStep = 1; // 1: Decomp, 2: Pattern, 3: Abstract, 4: Algo
+                this.score = 0;
+                this.completedSteps = { m1: [false,false,false,false], m2: [false,false,false,false], m3: [false,false,false,false] };
+
+                // Decomp temp selection state
+                this.decompSelected = [];
+                // Abstract temp state
+                this.abstractSelected = [];
+                // Algo order state
+                this.algoCurrentOrder = [];
+            }
+
+            init() {
+                this.renderMissionsList();
+                this.loadMission(0);
+                this.updateHUD();
+            }
+
+            renderMissionsList() {
+                const listEl = document.getElementById('mission-list');
+                listEl.innerHTML = '';
+
+                MISSIONS_DATA.forEach((m, idx) => {
+                    const isActive = idx === this.activeMissionIdx;
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border cursor-pointer transition pillar-card ${
+                        isActive 
+                            ? 'bg-blue-600/15 border-blue-500/50 text-white glow-blue' 
+                            : 'bg-slate-800/50 border-slate-700/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    }`;
+
+                    const completedCount = this.completedSteps[m.id].filter(Boolean).length;
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-8 h-8 rounded-xl ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'} flex items-center justify-center text-sm">
+                                    <i class="fa-solid ${m.icon}"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold ${isActive ? 'text-blue-400' : 'text-slate-200'}">${m.title}</div>
+                                    <div class="text-[10px] text-slate-400 font-mono">${m.category}</div>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${completedCount === 4 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
+                                ${completedCount}/4 BK
+                            </span>
+                        </div>
+                    `;
+
+                    card.onclick = () => {
+                        audio.playClick();
+                        this.loadMission(idx);
+                    };
+
+                    listEl.appendChild(card);
+                });
+            }
+
+            loadMission(idx) {
+                this.activeMissionIdx = idx;
+                this.activeStep = 1;
+                const m = MISSIONS_DATA[idx];
+
+                document.getElementById('active-mission-title').innerHTML = `
+                    <i class="fa-solid ${m.icon} text-blue-400 mr-1"></i> ${m.title}
+                `;
+                document.getElementById('active-mission-desc').innerText = m.desc;
+
+                this.renderMissionsList();
+                this.switchStep(1);
+            }
+
+            switchStep(stepNum) {
+                this.activeStep = stepNum;
+                audio.playClick();
+
+                // Highlight Pills
+                for (let i = 1; i <= 4; i++) {
+                    const btn = document.getElementById(`step-btn-${i}`);
+                    if (i === stepNum) {
+                        btn.className = "px-3 py-1 rounded-lg text-xs font-bold text-white bg-blue-600 shadow-sm transition";
+                    } else {
+                        btn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
+                    }
+                }
+
+                this.renderStepWorkspace();
+                this.updateExplanationPanel();
+            }
+
+            nextStep() {
+                if (this.activeStep < 4) {
+                    this.switchStep(this.activeStep + 1);
+                } else {
+                    if (this.activeMissionIdx < MISSIONS_DATA.length - 1) {
+                        this.loadMission(this.activeMissionIdx + 1);
+                    } else {
+                        this.showFinalCongratulation();
+                    }
+                }
+            }
+
+            prevStep() {
+                if (this.activeStep > 1) {
+                    this.switchStep(this.activeStep - 1);
+                }
+            }
+
+            renderStepWorkspace() {
+                const ws = document.getElementById('workspace-area');
+                ws.innerHTML = '';
+
+                const mission = MISSIONS_DATA[this.activeMissionIdx];
+
+                if (this.activeStep === 1) {
+                    // DEKOMPOSISI WORKSPACE
+                    const data = mission.steps.decomp;
+                    this.decompSelected = [];
+
+                    ws.innerHTML = `
+                        <div class="max-w-3xl w-full space-y-6">
+                            <div class="bg-blue-950/40 border border-blue-500/30 p-4 rounded-2xl text-center space-y-1">
+                                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono text-[10px] font-bold border border-blue-500/30">
+                                    PILAR 1: DEKOMPOSISI
+                                </span>
+                                <h3 class="text-sm font-bold text-white">${data.prompt}</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="decomp-items-grid">
+                                ${data.items.map(item => `
+                                    <button onclick="sim.toggleDecompItem('${item.id}')" id="decomp-${item.id}" 
+                                        class="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-left transition flex items-center justify-between group">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 rounded-xl bg-slate-800 group-hover:bg-blue-600/20 text-slate-400 group-hover:text-blue-400 flex items-center justify-center transition">
+                                                <i class="fa-solid fa-cube text-xs"></i>
+                                            </div>
+                                            <span class="text-xs font-semibold text-slate-200">${item.title}</span>
+                                        </div>
+                                        <div id="check-${item.id}" class="w-5 h-5 rounded-md border border-slate-700 flex items-center justify-center text-[10px] text-transparent">
+                                            <i class="fa-solid fa-check"></i>
+                                        </div>
+                                    </button>
+                                `).join('')}
+                            </div>
+
+                            <div class="text-center pt-2">
+                                <button onclick="sim.verifyDecomp()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30">
+                                    <i class="fa-solid fa-vial mr-1.5"></i> Uji Hasil Dekomposisi
+                                </button>
+                                <div id="decomp-feedback" class="text-xs font-mono mt-3 hidden"></div>
+                            </div>
+                        </div>
+                    `;
+                } else if (this.activeStep === 2) {
+                    // PENGENALAN POLA WORKSPACE
+                    const data = mission.steps.pattern;
+
+                    ws.innerHTML = `
+                        <div class="max-w-3xl w-full space-y-6">
+                            <div class="bg-pink-950/40 border border-pink-500/30 p-4 rounded-2xl text-center space-y-1">
+                                <span class="px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-400 font-mono text-[10px] font-bold border border-pink-500/30">
+                                    PILAR 2: PENGENALAN POLA
+                                </span>
+                                <h3 class="text-sm font-bold text-white">${data.prompt}</h3>
+                            </div>
+
+                            <!-- Data Pattern Table/Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                ${data.patterns.map(p => `
+                                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
+                                        <div class="flex items-center space-x-2 ${p.color} text-xs font-bold font-mono">
+                                            <i class="fa-solid ${p.icon}"></i>
+                                            <span>${p.time}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-300 leading-relaxed">${p.status}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <!-- Multiple Choice Question -->
+                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+                                <label class="text-xs font-bold text-pink-400 font-mono block">
+                                    <i class="fa-solid fa-circle-question mr-1"></i> ${data.question}
+                                </label>
+
+                                <div class="space-y-2">
+                                    ${data.options.map((opt, i) => `
+                                        <button onclick="sim.verifyPattern(${opt.correct}, this)" class="w-full p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-pink-500/50 text-left text-xs text-slate-200 font-medium transition flex items-center justify-between">
+                                            <span>${opt.text}</span>
+                                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                                <div id="pattern-feedback" class="text-xs font-mono mt-2 hidden"></div>
+                            </div>
+                        </div>
+                    `;
+                } else if (this.activeStep === 3) {
+                    // ABSTRAKSI WORKSPACE
+                    const data = mission.steps.abstract;
+
+                    ws.innerHTML = `
+                        <div class="max-w-3xl w-full space-y-6">
+                            <div class="bg-purple-950/40 border border-purple-500/30 p-4 rounded-2xl text-center space-y-1">
+                                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-mono text-[10px] font-bold border border-purple-500/30">
+                                    PILAR 3: ABSTRAKSI
+                                </span>
+                                <h3 class="text-sm font-bold text-white">${data.prompt}</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="abstract-cards-grid">
+                                ${data.cards.map(c => `
+                                    <button onclick="sim.toggleAbstractCard('${c.id}')" id="abstract-${c.id}" 
+                                        class="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-left transition flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 rounded-xl bg-slate-800 text-purple-400 flex items-center justify-center">
+                                                <i class="fa-solid fa-filter text-xs"></i>
+                                            </div>
+                                            <span class="text-xs font-semibold text-slate-200">${c.label}</span>
+                                        </div>
+                                        <span id="badge-abs-${c.id}" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-500">
+                                            Abaikan
+                                        </span>
+                                    </button>
+                                `).join('')}
+                            </div>
+
+                            <div class="text-center pt-2">
+                                <button onclick="sim.verifyAbstract()" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-lg shadow-purple-600/30">
+                                    <i class="fa-solid fa-sliders mr-1.5"></i> Terapkan Pemfilteran Abstraksi
+                                </button>
+                                <div id="abstract-feedback" class="text-xs font-mono mt-3 hidden"></div>
+                            </div>
+                        </div>
+                    `;
+                } else if (this.activeStep === 4) {
+                    // ALGORITMA WORKSPACE
+                    const data = mission.steps.algo;
+                    this.algoCurrentOrder = [...data.blocks].sort(() => Math.random() - 0.5);
+
+                    ws.innerHTML = `
+                        <div class="max-w-3xl w-full space-y-6">
+                            <div class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-2xl text-center space-y-1">
+                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30">
+                                    PILAR 4: DESAIN ALGORITMA
+                                </span>
+                                <h3 class="text-sm font-bold text-white">${data.prompt}</h3>
+                            </div>
+
+                            <div class="space-y-2.5" id="algo-blocks-container">
+                                ${this.renderAlgoBlocks()}
+                            </div>
+
+                            <div class="text-center pt-2">
+                                <button onclick="sim.verifyAlgo()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30">
+                                    <i class="fa-solid fa-play mr-1.5"></i> Jalankan Simulator Algoritma
+                                </button>
+                                <div id="algo-feedback" class="text-xs font-mono mt-3 hidden"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            toggleDecompItem(id) {
+                audio.playClick();
+                const idx = this.decompSelected.indexOf(id);
+                if (idx > -1) {
+                    this.decompSelected.splice(idx, 1);
+                } else {
+                    this.decompSelected.push(id);
+                }
+
+                const btn = document.getElementById(`decomp-${id}`);
+                const check = document.getElementById(`check-${id}`);
+
+                if (this.decompSelected.includes(id)) {
+                    btn.className = "p-4 rounded-2xl bg-blue-600/20 border-2 border-blue-500 text-left transition flex items-center justify-between";
+                    check.className = "w-5 h-5 rounded-md bg-blue-500 text-white flex items-center justify-center text-[10px]";
+                } else {
+                    btn.className = "p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-left transition flex items-center justify-between group";
+                    check.className = "w-5 h-5 rounded-md border border-slate-700 flex items-center justify-center text-[10px] text-transparent";
+                }
+            }
+
+            verifyDecomp() {
+                const mission = MISSIONS_DATA[this.activeMissionIdx];
+                const correctIds = mission.steps.decomp.items.filter(i => i.correct).map(i => i.id);
+                const feedback = document.getElementById('decomp-feedback');
+
+                const isMatch = correctIds.length === this.decompSelected.length && 
+                                correctIds.every(id => this.decompSelected.includes(id));
+
+                feedback.classList.remove('hidden');
+
+                if (isMatch) {
+                    audio.playSuccess();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> DEKOMPOSISI TEPAT! Masalah berhasil dipecah menjadi modul-modul penting. (+100 XP)`;
+                    this.markStepCompleted(0);
+                    this.addScore(100);
+                } else {
+                    audio.playError();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> KURANG TEPAT! Pastikan membuang atribut yang tidak relevan dengan masalah inti. Coba lagi.`;
+                }
+            }
+
+            verifyPattern(isCorrect, btnEl) {
+                const feedback = document.getElementById('pattern-feedback');
+                feedback.classList.remove('hidden');
+
+                if (isCorrect) {
+                    audio.playSuccess();
+                    btnEl.className = "w-full p-3 rounded-xl bg-emerald-600 text-white border border-emerald-400 text-left text-xs font-bold transition flex items-center justify-between";
+                    feedback.className = "text-xs font-mono mt-2 p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> POLA TERDETEKSI! Kamu berhasil mengidentifikasi kecenderungan data berulang. (+100 XP)`;
+                    this.markStepCompleted(1);
+                    this.addScore(100);
+                } else {
+                    audio.playError();
+                    btnEl.className = "w-full p-3 rounded-xl bg-rose-600 text-white border border-rose-400 text-left text-xs font-bold transition flex items-center justify-between";
+                    feedback.className = "text-xs font-mono mt-2 p-3 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> POLA SALAH! Perhatikan kembali tren data tabel di atas.`;
+                }
+            }
+
+            toggleAbstractCard(id) {
+                audio.playClick();
+                const idx = this.abstractSelected.indexOf(id);
+                if (idx > -1) {
+                    this.abstractSelected.splice(idx, 1);
+                } else {
+                    this.abstractSelected.push(id);
+                }
+
+                const btn = document.getElementById(`abstract-${id}`);
+                const badge = document.getElementById(`badge-abs-${id}`);
+
+                if (this.abstractSelected.includes(id)) {
+                    btn.className = "p-4 rounded-2xl bg-purple-600/20 border-2 border-purple-500 text-left transition flex items-center justify-between";
+                    badge.className = "text-[10px] font-mono px-2.5 py-0.5 rounded bg-purple-500 text-white font-bold";
+                    badge.innerText = "Dipakai (Penting)";
+                } else {
+                    btn.className = "p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-left transition flex items-center justify-between";
+                    badge.className = "text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-500";
+                    badge.innerText = "Abaikan";
+                }
+            }
+
+            verifyAbstract() {
+                const mission = MISSIONS_DATA[this.activeMissionIdx];
+                const essentialIds = mission.steps.abstract.cards.filter(c => c.essential).map(c => c.id);
+                const feedback = document.getElementById('abstract-feedback');
+
+                const isMatch = essentialIds.length === this.abstractSelected.length &&
+                                essentialIds.every(id => this.abstractSelected.includes(id));
+
+                feedback.classList.remove('hidden');
+
+                if (isMatch) {
+                    audio.playSuccess();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ABSTRAKSI BERHASIL! Rincian sampah/noise telah disaring, menyisakan data esensial. (+100 XP)`;
+                    this.markStepCompleted(2);
+                    this.addScore(100);
+                } else {
+                    audio.playError();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> MASIH ADA NOISE! Kamu memilih informasi yang tidak relevan atau melewatkan data penting.`;
+                }
+            }
+
+            renderAlgoBlocks() {
+                return this.algoCurrentOrder.map((b, idx) => `
+                    <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-300 font-semibold">${b.text}</span>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="sim.moveAlgoBlock(${idx}, -1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                            <button onclick="sim.moveAlgoBlock(${idx}, 1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            moveAlgoBlock(idx, dir) {
+                audio.playClick();
+                const targetIdx = idx + dir;
+                if (targetIdx < 0 || targetIdx >= this.algoCurrentOrder.length) return;
+
+                const temp = this.algoCurrentOrder[idx];
+                this.algoCurrentOrder[idx] = this.algoCurrentOrder[targetIdx];
+                this.algoCurrentOrder[targetIdx] = temp;
+
+                document.getElementById('algo-blocks-container').innerHTML = this.renderAlgoBlocks();
+            }
+
+            verifyAlgo() {
+                const feedback = document.getElementById('algo-feedback');
+                let isCorrect = true;
+
+                for (let i = 0; i < this.algoCurrentOrder.length; i++) {
+                    if (this.algoCurrentOrder[i].order !== i + 1) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+
+                feedback.classList.remove('hidden');
+
+                if (isCorrect) {
+                    audio.playSuccess();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ALGORITMA VALID! Urutan logika berjalan sempurna tanpa error. (+100 XP)`;
+                    this.markStepCompleted(3);
+                    this.addScore(100);
+
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+                    }
+                } else {
+                    audio.playError();
+                    feedback.className = "text-xs font-mono mt-3 p-3 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                    feedback.innerHTML = `<i class="fa-solid fa-bug mr-1"></i> LOGIC BUG! Urutan instruksi belum logis. Atur ulang susunan blok.`;
+                }
+            }
+
+            markStepCompleted(stepIdx) {
+                const missionId = MISSIONS_DATA[this.activeMissionIdx].id;
+                this.completedSteps[missionId][stepIdx] = true;
+                this.renderMissionsList();
+            }
+
+            addScore(pts) {
+                this.score += pts;
+                this.updateHUD();
+            }
+
+            updateHUD() {
+                document.getElementById('hud-score').innerText = `${this.score} XP`;
+            }
+
+            updateExplanationPanel() {
+                const title = document.getElementById('explanation-title');
+                const text = document.getElementById('explanation-text');
+                const icon = document.getElementById('explanation-icon');
+
+                if (this.activeStep === 1) {
+                    title.innerText = "PENERAPAN BK: DEKOMPOSISI";
+                    title.className = "text-xs font-bold text-blue-400 font-mono uppercase tracking-wide";
+                    text.innerText = "Dekomposisi membantu Anda mengurai sistem besar yang membingungkan menjadi komponen terisolasi kecil agar mudah ditangani tanpa kewalahan.";
+                    icon.className = "w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg flex-shrink-0 mt-0.5";
+                    icon.innerHTML = '<i class="fa-solid fa-sitemap"></i>';
+                } else if (this.activeStep === 2) {
+                    title.innerText = "PENERAPAN BK: PENGENALAN POLA";
+                    title.className = "text-xs font-bold text-pink-400 font-mono uppercase tracking-wide";
+                    text.innerText = "Pengenalan Pola memungkinkan kita memprediksi atau memanfaatkan perilaku berulang dari data masa lalu untuk mencari jalan pintas penyelesaian.";
+                    icon.className = "w-9 h-9 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-lg flex-shrink-0 mt-0.5";
+                    icon.innerHTML = '<i class="fa-solid fa-shapes"></i>';
+                } else if (this.activeStep === 3) {
+                    title.innerText = "PENERAPAN BK: ABSTRAKSI";
+                    title.className = "text-xs font-bold text-purple-400 font-mono uppercase tracking-wide";
+                    text.innerText = "Abstraksi menyaring 'kebisingan' (noise) detail yang tidak relevan agar fokus utama solusi dapat ditentukan secara efisien.";
+                    icon.className = "w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg flex-shrink-0 mt-0.5";
+                    icon.innerHTML = '<i class="fa-solid fa-filter"></i>';
+                } else if (this.activeStep === 4) {
+                    title.innerText = "PENERAPAN BK: DESAIN ALGORITMA";
+                    title.className = "text-xs font-bold text-emerald-400 font-mono uppercase tracking-wide";
+                    text.innerText = "Algoritma menyusun aturan instruksi langkah demi langkah secara sistematis yang dapat dieksekusi secara berulang oleh komputer atau manusia.";
+                    icon.className = "w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg flex-shrink-0 mt-0.5";
+                    icon.innerHTML = '<i class="fa-solid fa-code"></i>';
+                }
+            }
+
+            openTeoriModal() {
+                audio.playClick();
+                document.getElementById('modal-teori').classList.remove('hidden');
+            }
+
+            closeTeoriModal() {
+                audio.playClick();
+                document.getElementById('modal-teori').classList.add('hidden');
+            }
+
+            showFinalCongratulation() {
+                alert(`SELAMAT! Anda telah menuntaskan seluruh simulasi laboratorium Berpikir Komputasional dengan total skor: ${this.score} XP!`);
+            }
+        }
+
+        let sim;
+        window.onload = () => {
+            sim = new CTSimulatorApp();
+            sim.init();
+        };
+    </script>
+</body>
+</html>
