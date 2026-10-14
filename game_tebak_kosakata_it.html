@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Vocabulary Master - Indonesia ke Inggris</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#38bdf8',
+                            purple: '#818cf8',
+                            neon: '#22c55e',
+                            pink: '#f43f5e',
+                            gold: '#fbbf24'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.12) 0px, transparent 50%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cyber-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .cyber-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Perspective for Flashcard Flip */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6)); }
+            50% { filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.9)); }
+        }
+
+        .glow-effect {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col justify-between min-h-screen text-slate-100 selection:bg-sky-500 selection:text-white">
+
+    <!-- Header Navbar -->
+    <header class="w-full max-w-5xl mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-800/80">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="game.showHome()">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30">
+                <i class="fa-solid fa-code text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-300">
+                    IT Vocab Master
+                </h1>
+                <p class="text-xs text-slate-400 font-mono">ID <i class="fa-solid fa-arrow-right text-[10px] mx-1"></i> EN Dictionary Game</p>
+            </div>
+        </div>
+
+        <!-- Global Player Quick Stats -->
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center space-x-2 text-sm font-mono">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <span id="header-score" class="font-bold text-amber-300">0</span>
+            </div>
+            <div class="bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center space-x-2 text-sm font-mono">
+                <i class="fa-solid fa-fire text-rose-500"></i>
+                <span id="header-streak" class="font-bold text-rose-400">0</span>
+            </div>
+            <button id="sound-toggle" onclick="audio.toggleSound()" class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto px-4 py-6 flex-grow flex flex-col justify-center">
+
+        <!-- SCREEN 1: HOME & MODE SELECTOR -->
+        <section id="screen-home" class="space-y-8 py-4">
+            <div class="text-center space-y-3">
+                <span class="px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 text-xs font-mono font-semibold border border-sky-500/20 uppercase tracking-wider">
+                    Asah Kosakata Komputer & HP Kamu
+                </span>
+                <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight">
+                    Kuasai Istilah <span class="bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400">Teknologi & IT</span>
+                </h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm md:text-base">
+                    Tebak padanan kata istilah komputer, sistem operasi, smartphone, dan pemrograman dari Bahasa Indonesia ke Bahasa Inggris!
+                </p>
+            </div>
+
+            <!-- Category Filter Selector -->
+            <div class="glass-card p-4 rounded-2xl border border-slate-700/60">
+                <label class="block text-xs font-mono font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-filter mr-1"></i> Pilih Kategori Istilah:
+                </label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2" id="category-selector">
+                    <!-- Dynamically populated categories -->
+                </div>
+            </div>
+
+            <!-- Game Mode Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Mode 1: Quiz Multi-Choice -->
+                <div onclick="game.startQuizMode()" class="glass-card p-6 rounded-2xl hover:border-sky-500/50 transition cursor-pointer group flex flex-col justify-between hover:scale-[1.02] duration-200">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xl mb-4 group-hover:bg-sky-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white">Speed Quiz</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                            Pilih jawaban bahasa Inggris yang tepat sebelum waktu habis. Cocok untuk uji kecepatan!
+                        </p>
+                    </div>
+                    <div class="flex items-center text-xs font-bold text-sky-400 group-hover:translate-x-1 transition">
+                        <span>Mulai Kuis</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Type Spelling -->
+                <div onclick="game.startTypeMode()" class="glass-card p-6 rounded-2xl hover:border-purple-500/50 transition cursor-pointer group flex flex-col justify-between hover:scale-[1.02] duration-200">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:bg-purple-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-keyboard"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white">Type Master</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                            Ketik kata bahasa Inggris sesuai ejaan yang benar. Menguji memori aktif dan ejaan kata.
+                        </p>
+                    </div>
+                    <div class="flex items-center text-xs font-bold text-purple-400 group-hover:translate-x-1 transition">
+                        <span>Mulai Ketik</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Mode 3: Flashcards -->
+                <div onclick="game.startFlashcardMode()" class="glass-card p-6 rounded-2xl hover:border-emerald-500/50 transition cursor-pointer group flex flex-col justify-between hover:scale-[1.02] duration-200">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:bg-emerald-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white">Kartu Belajar</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                            Mode santai untuk menghafal istilah, penjelasan, dan audio pengucapan bahasa Inggris.
+                        </p>
+                    </div>
+                    <div class="flex items-center text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition">
+                        <span>Buka Kartu</span> <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: MULTIPLE CHOICE QUIZ -->
+        <section id="screen-quiz" class="hidden space-y-6">
+            <!-- Quiz Header Info -->
+            <div class="flex items-center justify-between glass-card p-4 rounded-xl">
+                <button onclick="game.showHome()" class="text-xs font-mono text-slate-400 hover:text-white flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Menu
+                </button>
+                <div class="flex items-center space-x-6">
+                    <!-- Progress Bar -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-mono text-slate-400">Soal:</span>
+                        <span id="quiz-progress-text" class="text-sm font-bold font-mono text-sky-400">1/10</span>
+                    </div>
+                    <!-- Timer -->
+                    <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-700">
+                        <i class="fa-solid fa-clock text-amber-400 text-xs"></i>
+                        <span id="quiz-timer" class="text-sm font-bold font-mono text-amber-300">15s</span>
+                    </div>
+                    <!-- Hearts / Lives -->
+                    <div id="quiz-lives" class="flex space-x-1 text-rose-500 text-sm">
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-card p-8 rounded-2xl text-center relative overflow-hidden">
+                <div class="absolute top-3 left-4 text-xs font-mono text-slate-400" id="quiz-category-tag">
+                    <i class="fa-solid fa-tag mr-1"></i> Software
+                </div>
+
+                <p class="text-xs font-mono text-sky-400 uppercase tracking-widest mb-2">Apa bahasa Inggris dari:</p>
+                <h3 id="quiz-question-id" class="text-3xl md:text-4xl font-extrabold text-white my-3 tracking-tight">
+                    "Perangkat Lunak"
+                </h3>
+                <p id="quiz-hint-text" class="text-xs text-slate-400 max-w-md mx-auto italic mt-1 min-h-[1.5rem]">
+                    Petunjuk: Program yang dijalankan di dalam komputer.
+                </p>
+            </div>
+
+            <!-- Choice Grid -->
+            <div id="quiz-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Buttons injected via JS -->
+            </div>
+        </section>
+
+        <!-- SCREEN 3: TYPE MASTER MODE -->
+        <section id="screen-type" class="hidden space-y-6">
+            <div class="flex items-center justify-between glass-card p-4 rounded-xl">
+                <button onclick="game.showHome()" class="text-xs font-mono text-slate-400 hover:text-white flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Menu
+                </button>
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs font-mono text-slate-400">Skor Ketik:</span>
+                    <span id="type-score" class="text-sm font-bold font-mono text-purple-400">0</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 rounded-2xl text-center space-y-4">
+                <span id="type-category-tag" class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-mono">
+                    Hardware
+                </span>
+                <p class="text-xs font-mono text-slate-400 uppercase tracking-widest mt-2">Terjemahkan ke Bahasa Inggris:</p>
+                <h3 id="type-question-id" class="text-3xl md:text-4xl font-extrabold text-white my-2">
+                    "Papan Ketik"
+                </h3>
+                <p id="type-description" class="text-xs text-slate-400 max-w-md mx-auto italic">
+                    Perangkat keras untuk memasukkan teks.
+                </p>
+
+                <!-- Letter Clue / Length indicator -->
+                <div id="type-clue-box" class="flex justify-center gap-2 my-4 flex-wrap">
+                    <!-- Blank slots for letters generated by JS -->
+                </div>
+
+                <!-- Input Box -->
+                <form onsubmit="game.submitTypeAnswer(event)" class="max-w-md mx-auto flex gap-2">
+                    <input type="text" id="type-input" placeholder="Ketik kata bahasa Inggris..." 
+                        autocomplete="off" spellcheck="false"
+                        class="w-full bg-slate-900 border-2 border-slate-700 focus:border-purple-500 text-white font-mono px-4 py-3 rounded-xl outline-none transition text-center text-lg uppercase tracking-wider">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-xl font-bold font-mono transition cyber-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+
+                <!-- Action Hints -->
+                <div class="flex justify-center items-center space-x-3 pt-2">
+                    <button onclick="game.useHint()" id="hint-btn" class="text-xs font-mono bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center">
+                        <i class="fa-solid fa-lightbulb mr-1.5"></i> Minta Bantuan Huruf
+                    </button>
+                    <button onclick="game.speakCurrentWord()" class="text-xs font-mono bg-slate-800 hover:bg-slate-700 text-sky-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center">
+                        <i class="fa-solid fa-volume-high mr-1.5"></i> Dengar Audio
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: FLASHCARDS MODE -->
+        <section id="screen-flashcard" class="hidden space-y-6">
+            <div class="flex items-center justify-between glass-card p-4 rounded-xl">
+                <button onclick="game.showHome()" class="text-xs font-mono text-slate-400 hover:text-white flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Menu
+                </button>
+                <div class="text-xs font-mono text-slate-400">
+                    Kartu <span id="card-index" class="text-emerald-400 font-bold">1</span> dari <span id="card-total">50</span>
+                </div>
+            </div>
+
+            <!-- Flip Card Container -->
+            <div class="perspective-1000 w-full max-w-lg mx-auto h-80">
+                <div id="flashcard-inner" onclick="game.flipCard()" class="transform-style-3d relative w-full h-full cursor-pointer transition-transform duration-500">
+                    
+                    <!-- Front Side (Indonesian) -->
+                    <div class="backface-hidden absolute inset-0 glass-card rounded-2xl p-6 flex flex-col justify-between border-2 border-slate-700/80 hover:border-emerald-500/50 transition shadow-2xl">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span id="fc-category"><i class="fa-solid fa-folder mr-1"></i> Sistem</span>
+                            <span class="text-emerald-400"><i class="fa-solid fa-rotate mr-1"></i> Klik untuk Membalik</span>
+                        </div>
+                        <div class="text-center my-auto">
+                            <p class="text-xs text-slate-400 font-mono uppercase tracking-widest mb-2">Bahasa Indonesia</p>
+                            <h2 id="fc-indonesian" class="text-3xl md:text-4xl font-extrabold text-white">
+                                "Penyimpanan Awan"
+                            </h2>
+                        </div>
+                        <div class="text-center text-xs text-slate-400 italic">
+                            <i class="fa-solid fa-hand-pointer mr-1"></i> Klik kartu untuk lihat istilah Inggris
+                        </div>
+                    </div>
+
+                    <!-- Back Side (English) -->
+                    <div class="rotate-y-180 backface-hidden absolute inset-0 glass-card bg-slate-900/90 rounded-2xl p-6 flex flex-col justify-between border-2 border-emerald-500/60 shadow-2xl">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> English Term</span>
+                            <button onclick="event.stopPropagation(); game.speakCurrentWord();" class="text-sky-400 hover:text-white p-1">
+                                <i class="fa-solid fa-volume-high text-base"></i>
+                            </button>
+                        </div>
+                        <div class="text-center my-auto space-y-2">
+                            <h2 id="fc-english" class="text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight font-mono">
+                                Cloud Storage
+                            </h2>
+                            <p id="fc-example" class="text-xs text-slate-300 max-w-xs mx-auto bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                                Contoh: "I backup my photos to cloud storage."
+                            </p>
+                        </div>
+                        <div class="text-center text-xs text-slate-400 italic">
+                            Definisi: Layanan penyimpan data online via internet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flashcard Controls -->
+            <div class="flex justify-center items-center space-x-4 pt-2">
+                <button onclick="game.prevCard()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2.5 rounded-xl border border-slate-700 font-mono text-sm transition">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Sebelum
+                </button>
+                <button onclick="game.speakCurrentWord()" class="bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 px-4 py-2.5 rounded-xl font-mono text-sm transition">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="game.nextCard()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-mono text-sm transition cyber-btn">
+                    Berikutnya <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: GAME OVER / RESULT -->
+        <section id="screen-result" class="hidden space-y-6 text-center max-w-lg mx-auto">
+            <div class="glass-card p-8 rounded-2xl border border-slate-700 relative overflow-hidden space-y-6">
+                <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-rose-500 flex items-center justify-center text-white text-3xl shadow-xl glow-effect">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-3xl font-extrabold text-white">Sesi Selesai!</h2>
+                    <p id="result-subtitle" class="text-sm text-slate-400 mt-1">Kerja bagus! Kosakata IT kamu makin mantap.</p>
+                </div>
+
+                <!-- Score Breakdown Grid -->
+                <div class="grid grid-cols-2 gap-3 font-mono text-left">
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block">Total Skor</span>
+                        <span id="res-score" class="text-2xl font-bold text-amber-400">0</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block">Akurasi</span>
+                        <span id="res-accuracy" class="text-2xl font-bold text-emerald-400">0%</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block">Combo Terbaik</span>
+                        <span id="res-combo" class="text-2xl font-bold text-rose-400">0x</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block">Kata Dikuasai</span>
+                        <span id="res-words" class="text-2xl font-bold text-sky-400">0</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="game.retryCurrentMode()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl font-bold font-mono transition cyber-btn">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> Main Lagi
+                    </button>
+                    <button onclick="game.showHome()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-3 rounded-xl border border-slate-700 font-bold font-mono transition">
+                        <i class="fa-solid fa-house mr-2"></i> Menu Utama
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs text-slate-500 border-t border-slate-800/60 font-mono">
+        <p>Game Interaktif Kosakata IT & Komputer (Indonesia - Inggris) &copy; 2026</p>
+    </footer>
+
+    <script>
+        /* Web Audio Synthesizer for SFX */
+        class SoundEffects {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+
+            initCtx() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+
+            toggleSound() {
+                this.enabled = !this.enabled;
+                const icon = document.getElementById('sound-icon');
+                if (this.enabled) {
+                    icon.className = 'fa-solid fa-volume-high';
+                    this.playCorrect();
+                } else {
+                    icon.className = 'fa-solid fa-volume-xmark';
+                }
+            }
+
+            playCorrect() {
+                if (!this.enabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, this.ctx.currentTime + 0.2); // G5
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playWrong() {
+                if (!this.enabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(130, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.initCtx();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+        }
+
+        const audio = new SoundEffects();
+
+        const IT_VOCABULARY = [
+            // Hardware
+            { id: 1, id_word: "Perangkat Keras", en_word: "Hardware", category: "Hardware", hint: "Komponen fisik sistem komputer.", example: "GPU is a critical piece of hardware." },
+            { id: 2, id_word: "Papan Ketik", en_word: "Keyboard", category: "Hardware", hint: "Alat input tombol ketik.", example: "She types fast on a mechanical keyboard." },
+            { id: 3, id_word: "Tetikus", en_word: "Mouse", category: "Hardware", hint: "Alat penunjuk kursor di komputer.", example: "Move the mouse pointer to click the button." },
+            { id: 4, id_word: "Layar Sentuh", en_word: "Touchscreen", category: "Hardware", hint: "Layar responsif sentuhan jari.", example: "Smartphones use capacitive touchscreens." },
+            { id: 5, id_word: "Penyimpanan Eksternal", en_word: "External Storage", category: "Hardware", hint: "Harddisk atau SSD tambahan di luar komputer.", example: "Back up your files to external storage." },
+            { id: 6, id_word: "Pencetak", en_word: "Printer", category: "Hardware", hint: "Perangkat pencetak dokumen ke kertas.", example: "The printer is running out of ink." },
+            
+            // Software & Apps
+            { id: 7, id_word: "Perangkat Lunak", en_word: "Software", category: "Software", hint: "Program atau aplikasi sistem.", example: "Keep your software updated regularly." },
+            { id: 8, id_word: "Peramban", en_word: "Browser", category: "Software", hint: "Aplikasi untuk selancar di web (misal: Chrome).", example: "Open the website in your web browser." },
+            { id: 9, id_word: "Unduh", en_word: "Download", category: "Software", hint: "Mengambil berkas dari internet ke HP/PC.", example: "Download the file from the email attachment." },
+            { id: 10, id_word: "Unggah", en_word: "Upload", category: "Software", hint: "Mengirim berkas dari HP/PC ke internet.", example: "Upload your video to the cloud drive." },
+            { id: 11, id_word: "Pembaruan", en_word: "Update", category: "Software", hint: "Memperbarui versi aplikasi atau sistem.", example: "A new system update is available." },
+            { id: 12, id_word: "Cadangan", en_word: "Backup", category: "Software", hint: "Salinan data cadangan untuk keamanan.", example: "Always perform a daily data backup." },
+            { id: 13, id_word: "Kutu / Kerusakan Program", en_word: "Bug", category: "Software", hint: "Kesalahan/error dalam kode program.", example: "The developers fixed the login bug." },
+            { id: 14, id_word: "Perbaikan Cepat", en_word: "Patch", category: "Software", hint: "Pembaruan kecil untuk menutupi bug.", example: "Security patch 1.0 is released." },
+
+            // Systems & OS
+            { id: 15, id_word: "Penyimpanan Awan", en_word: "Cloud Storage", category: "System", hint: "Layanan simpan data online internet.", example: "Google Drive is a cloud storage service." },
+            { id: 16, id_word: "Kata Sandi", en_word: "Password", category: "System", hint: "Kode rahasia akses akun.", example: "Use a strong and unique password." },
+            { id: 17, id_word: "Antarmuka", en_word: "Interface", category: "System", hint: "Tampilan penghubung pengguna & sistem.", example: "The app has a clean user interface." },
+            { id: 18, id_word: "Layar Utama", en_word: "Home Screen", category: "System", hint: "Tampilan depan awal smartphone.", example: "Add shortcut icons to your home screen." },
+            { id: 19, id_word: "Pengaturan", en_word: "Settings", category: "System", hint: "Menu konfigurasi sistem.", example: "Change the dark theme in system settings." },
+            { id: 20, id_word: "Kecerahan", en_word: "Brightness", category: "System", hint: "Tingkat terang gelap layar.", example: "Reduce display brightness to save battery." },
+            { id: 21, id_word: "Papan Klip", en_word: "Clipboard", category: "System", hint: "Tempat penyimpanan sementara teks terpangkas/disalin.", example: "Text copied to clipboard successfully." },
+            { id: 22, id_word: "Mulai Ulang", en_word: "Reboot", category: "System", hint: "Restart sistem komputer/smartphone.", example: "Reboot your phone to apply updates." },
+            { id: 23, id_word: "Pemberitahuan", en_word: "Notification", category: "System", hint: "Pesan info atau alert di smartphone.", example: "Turn off notifications during meetings." },
+
+            // Networking & Security
+            { id: 24, id_word: "Jaringan", en_word: "Network", category: "Networking", hint: "Koneksi antar komputer atau perangkat.", example: "Check your local network connection." },
+            { id: 25, id_word: "Keamanan Siber", en_word: "Cybersecurity", category: "Networking", hint: "Perlindungan sistem dari serangan digital.", example: "Cybersecurity is essential for banking apps." },
+            { id: 26, id_word: "Peretas", en_word: "Hacker", category: "Networking", hint: "Orang yang membobol sistem komputer.", example: "The hacker exploited a system vulnerability." },
+            { id: 27, id_word: "Peladen", en_word: "Server", category: "Networking", hint: "Komputer pusat penyedia layanan data.", example: "The server is temporarily down for maintenance." },
+            { id: 28, id_word: "Nirkabel", en_word: "Wireless", category: "Networking", hint: "Koneksi tanpa kabel (Wi-Fi/Bluetooth).", example: "Connect to the wireless network." },
+            { id: 29, id_word: "Tautan", en_word: "Link", category: "Networking", hint: "Alamat hyperlink antar halaman web.", example: "Click the link to verify your account." },
+            { id: 30, id_word: "Titik Akses", en_word: "Hotspot", category: "Networking", hint: "Berbagi koneksi internet dari HP.", example: "Enable personal hotspot on your phone." },
+
+            // Programming & Data
+            { id: 31, id_word: "Pengembang", en_word: "Developer", category: "Programming", hint: "Pembuat aplikasi atau software.", example: "She is a senior software developer." },
+            { id: 32, id_word: "Basis Data", en_word: "Database", category: "Programming", hint: "Kumpulan data terstruktur dalam komputer.", example: "The database stores user profiles." },
+            { id: 33, id_word: "Kode Sumber", en_word: "Source Code", category: "Programming", hint: "Teks baris instruksi pemrograman.", example: "The open source code is hosted on GitHub." },
+            { id: 34, id_word: "Penyelaras", en_word: "Sync", category: "Programming", hint: "Menyinkronkan data di beberapa perangkat.", example: "Sync your contacts across all devices." },
+            { id: 35, id_word: "Pengodean", en_word: "Encryption", category: "Programming", hint: "Pengacakan data agar aman dari sadapan.", example: "End-to-end encryption protects messages." },
+
+            // Modern Tech & AI
+            { id: 36, id_word: "Kecerdasan Buatan", en_word: "Artificial Intelligence", category: "Modern Tech", hint: "Sistem cerdas komputer (AI).", example: "Artificial Intelligence powers chatbot tools." },
+            { id: 37, id_word: "Pembelajaran Mesin", en_word: "Machine Learning", category: "Modern Tech", hint: "Metode AI yang belajar dari data.", example: "Recommendation algorithms use machine learning." },
+            { id: 38, id_word: "Rantai Blok", en_word: "Blockchain", category: "Modern Tech", hint: "Buku besar digital terdesentralisasi.", example: "Cryptocurrencies operate on blockchain tech." }
+        ];
+
+        const CATEGORIES = ["Semua", "Hardware", "Software", "System", "Networking", "Programming", "Modern Tech"];
+
+        class ITVocabGame {
+            constructor() {
+                this.selectedCategory = "Semua";
+                this.currentMode = null; // 'quiz', 'type', 'flashcard'
+                this.activePool = [];
+                this.currentIndex = 0;
+                
+                // Player Stats
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.correctCount = 0;
+                this.totalAttempted = 0;
+                this.lives = 3;
+
+                // Mode Specific States
+                this.quizTimer = null;
+                this.timeLeft = 15;
+                this.flashcardIsFlipped = false;
+                this.revealedHintLetters = 0;
+            }
+
+            init() {
+                this.renderCategoryButtons();
+                this.updateHeaderStats();
+            }
+
+            getFilteredVocab() {
+                if (this.selectedCategory === "Semua") {
+                    return [...IT_VOCABULARY];
+                }
+                return IT_VOCABULARY.filter(item => item.category === this.selectedCategory);
+            }
+
+            renderCategoryButtons() {
+                const container = document.getElementById('category-selector');
+                container.innerHTML = '';
+
+                CATEGORIES.forEach(cat => {
+                    const btn = document.createElement('button');
+                    const isActive = this.selectedCategory === cat;
+                    btn.className = `px-3 py-2 rounded-xl text-xs font-mono font-semibold transition flex items-center justify-center ${
+                        isActive 
+                        ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                    }`;
+                    btn.innerText = cat;
+                    btn.onclick = () => {
+                        audio.playClick();
+                        this.selectedCategory = cat;
+                        this.renderCategoryButtons();
+                    };
+                    container.appendChild(btn);
+                });
+            }
+
+            updateHeaderStats() {
+                document.getElementById('header-score').innerText = this.score;
+                document.getElementById('header-streak').innerText = this.streak;
+            }
+
+            hideAllScreens() {
+                ['screen-home', 'screen-quiz', 'screen-type', 'screen-flashcard', 'screen-result'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                if (this.quizTimer) clearInterval(this.quizTimer);
+            }
+
+            showHome() {
+                audio.playClick();
+                this.hideAllScreens();
+                document.getElementById('screen-home').classList.remove('hidden');
+            }
+
+            // Shuffle Helper
+            shuffleArray(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            startQuizMode() {
+                audio.playClick();
+                this.currentMode = 'quiz';
+                this.activePool = this.shuffleArray(this.getFilteredVocab()).slice(0, 10);
+                if (this.activePool.length === 0) return alert('Tidak ada kata di kategori ini!');
+
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.correctCount = 0;
+                this.totalAttempted = 0;
+                this.lives = 3;
+
+                this.hideAllScreens();
+                document.getElementById('screen-quiz').classList.remove('hidden');
+                this.loadQuizQuestion();
+            }
+
+            loadQuizQuestion() {
+                if (this.currentIndex >= this.activePool.length || this.lives <= 0) {
+                    this.showResults();
+                    return;
+                }
+
+                const currentItem = this.activePool[this.currentIndex];
+                document.getElementById('quiz-progress-text').innerText = `${this.currentIndex + 1}/${this.activePool.length}`;
+                document.getElementById('quiz-category-tag').innerHTML = `<i class="fa-solid fa-tag mr-1"></i> ${currentItem.category}`;
+                document.getElementById('quiz-question-id').innerText = `"${currentItem.id_word}"`;
+                document.getElementById('quiz-hint-text').innerText = `Petunjuk: ${currentItem.hint}`;
+
+                // Update Hearts
+                const heartsContainer = document.getElementById('quiz-lives');
+                heartsContainer.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    const heart = document.createElement('i');
+                    heart.className = i < this.lives ? 'fa-solid fa-heart' : 'fa-regular fa-heart opacity-30';
+                    heartsContainer.appendChild(heart);
+                }
+
+                // Prepare 4 choices
+                const wrongDistractors = IT_VOCABULARY
+                    .filter(v => v.en_word !== currentItem.en_word)
+                    .map(v => v.en_word);
+                const shuffledDistractors = this.shuffleArray(wrongDistractors).slice(0, 3);
+                const options = this.shuffleArray([currentItem.en_word, ...shuffledDistractors]);
+
+                const grid = document.getElementById('quiz-options-grid');
+                grid.innerHTML = '';
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'glass-card p-4 rounded-xl text-left font-mono font-bold text-slate-100 hover:border-sky-500 hover:bg-slate-800 transition cyber-btn flex justify-between items-center';
+                    btn.innerHTML = `<span>${opt}</span> <i class="fa-solid fa-circle-chevron-right text-slate-500 text-sm"></i>`;
+                    btn.onclick = () => this.handleQuizAnswer(opt, currentItem.en_word, btn);
+                    grid.appendChild(btn);
+                });
+
+                // Start Timer
+                this.timeLeft = 15;
+                document.getElementById('quiz-timer').innerText = `${this.timeLeft}s`;
+                if (this.quizTimer) clearInterval(this.quizTimer);
+
+                this.quizTimer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('quiz-timer').innerText = `${this.timeLeft}s`;
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.quizTimer);
+                        this.handleQuizTimeout(currentItem.en_word);
+                    }
+                }, 1000);
+            }
+
+            handleQuizAnswer(selected, correct, btnElement) {
+                clearInterval(this.quizTimer);
+                this.totalAttempted++;
+
+                const buttons = document.querySelectorAll('#quiz-options-grid button');
+                buttons.forEach(b => b.onclick = null); // disable double clicks
+
+                if (selected === correct) {
+                    audio.playCorrect();
+                    btnElement.classList.remove('glass-card');
+                    btnElement.classList.add('bg-emerald-600', 'text-white', 'border-emerald-400');
+                    this.score += 100 + (this.streak * 20);
+                    this.streak++;
+                    if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+                    this.correctCount++;
+                } else {
+                    audio.playWrong();
+                    btnElement.classList.remove('glass-card');
+                    btnElement.classList.add('bg-rose-600', 'text-white', 'border-rose-400');
+                    this.streak = 0;
+                    this.lives--;
+
+                    // Highlight correct answer
+                    buttons.forEach(b => {
+                        if (b.innerText.trim() === correct) {
+                            b.classList.add('bg-emerald-600/60', 'border-emerald-400');
+                        }
+                    });
+                }
+
+                this.updateHeaderStats();
+                setTimeout(() => {
+                    this.currentIndex++;
+                    this.loadQuizQuestion();
+                }, 1200);
+            }
+
+            handleQuizTimeout(correct) {
+                audio.playWrong();
+                this.totalAttempted++;
+                this.streak = 0;
+                this.lives--;
+                this.updateHeaderStats();
+
+                const buttons = document.querySelectorAll('#quiz-options-grid button');
+                buttons.forEach(b => {
+                    b.onclick = null;
+                    if (b.innerText.trim() === correct) {
+                        b.classList.add('bg-emerald-600', 'text-white');
+                    }
+                });
+
+                setTimeout(() => {
+                    this.currentIndex++;
+                    this.loadQuizQuestion();
+                }, 1200);
+            }
+
+            startTypeMode() {
+                audio.playClick();
+                this.currentMode = 'type';
+                this.activePool = this.shuffleArray(this.getFilteredVocab()).slice(0, 10);
+                if (this.activePool.length === 0) return alert('Tidak ada kata di kategori ini!');
+
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.correctCount = 0;
+                this.totalAttempted = 0;
+
+                this.hideAllScreens();
+                document.getElementById('screen-type').classList.remove('hidden');
+                this.loadTypeQuestion();
+            }
+
+            loadTypeQuestion() {
+                if (this.currentIndex >= this.activePool.length) {
+                    this.showResults();
+                    return;
+                }
+
+                this.revealedHintLetters = 0;
+                const currentItem = this.activePool[this.currentIndex];
+                document.getElementById('type-category-tag').innerText = currentItem.category;
+                document.getElementById('type-question-id').innerText = `"${currentItem.id_word}"`;
+                document.getElementById('type-description').innerText = currentItem.hint;
+                document.getElementById('type-score').innerText = this.score;
+
+                const input = document.getElementById('type-input');
+                input.value = '';
+                input.focus();
+
+                this.renderTypeClue();
+            }
+
+            renderTypeClue() {
+                const currentItem = this.activePool[this.currentIndex];
+                const targetWord = currentItem.en_word;
+                const clueBox = document.getElementById('type-clue-box');
+                clueBox.innerHTML = '';
+
+                for (let i = 0; i < targetWord.length; i++) {
+                    const char = targetWord[i];
+                    const slot = document.createElement('span');
+                    slot.className = 'w-8 h-10 border-b-2 border-purple-500 font-mono text-xl font-bold flex items-center justify-center uppercase text-purple-300';
+
+                    if (char === ' ') {
+                        slot.className = 'w-4 h-10'; // spacing
+                    } else if (i < this.revealedHintLetters) {
+                        slot.innerText = char;
+                    } else {
+                        slot.innerText = '_';
+                    }
+                    clueBox.appendChild(slot);
+                }
+            }
+
+            useHint() {
+                const currentItem = this.activePool[this.currentIndex];
+                if (this.revealedHintLetters < currentItem.en_word.length) {
+                    audio.playClick();
+                    this.revealedHintLetters++;
+                    this.renderTypeClue();
+                }
+            }
+
+            submitTypeAnswer(e) {
+                e.preventDefault();
+                const input = document.getElementById('type-input');
+                const userVal = input.value.trim().toLowerCase();
+                const currentItem = this.activePool[this.currentIndex];
+                const targetVal = currentItem.en_word.toLowerCase();
+
+                this.totalAttempted++;
+
+                if (userVal === targetVal) {
+                    audio.playCorrect();
+                    this.score += 150 - (this.revealedHintLetters * 20);
+                    this.correctCount++;
+                    this.streak++;
+                    if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+                    this.updateHeaderStats();
+
+                    input.classList.add('border-emerald-500', 'bg-emerald-950/40');
+                    setTimeout(() => {
+                        input.classList.remove('border-emerald-500', 'bg-emerald-950/40');
+                        this.currentIndex++;
+                        this.loadTypeQuestion();
+                    }, 800);
+                } else {
+                    audio.playWrong();
+                    this.streak = 0;
+                    this.updateHeaderStats();
+
+                    input.classList.add('border-rose-500', 'animate-shake');
+                    setTimeout(() => {
+                        input.classList.remove('border-rose-500', 'animate-shake');
+                    }, 600);
+                }
+            }
+
+            startFlashcardMode() {
+                audio.playClick();
+                this.currentMode = 'flashcard';
+                this.activePool = this.getFilteredVocab();
+                if (this.activePool.length === 0) return alert('Tidak ada kata di kategori ini!');
+
+                this.currentIndex = 0;
+                this.flashcardIsFlipped = false;
+
+                this.hideAllScreens();
+                document.getElementById('screen-flashcard').classList.remove('hidden');
+                this.loadFlashcard();
+            }
+
+            loadFlashcard() {
+                const currentItem = this.activePool[this.currentIndex];
+                this.flashcardIsFlipped = false;
+                const inner = document.getElementById('flashcard-inner');
+                inner.classList.remove('rotate-y-180');
+
+                document.getElementById('card-index').innerText = this.currentIndex + 1;
+                document.getElementById('card-total').innerText = this.activePool.length;
+
+                document.getElementById('fc-category').innerHTML = `<i class="fa-solid fa-folder mr-1"></i> ${currentItem.category}`;
+                document.getElementById('fc-indonesian').innerText = `"${currentItem.id_word}"`;
+                document.getElementById('fc-english').innerText = currentItem.en_word;
+                document.getElementById('fc-example').innerText = `Contoh: "${currentItem.example}"`;
+            }
+
+            flipCard() {
+                audio.playClick();
+                this.flashcardIsFlipped = !this.flashcardIsFlipped;
+                const inner = document.getElementById('flashcard-inner');
+                if (this.flashcardIsFlipped) {
+                    inner.classList.add('rotate-y-180');
+                    this.speakCurrentWord();
+                } else {
+                    inner.classList.remove('rotate-y-180');
+                }
+            }
+
+            prevCard() {
+                if (this.currentIndex > 0) {
+                    audio.playClick();
+                    this.currentIndex--;
+                    this.loadFlashcard();
+                }
+            }
+
+            nextCard() {
+                if (this.currentIndex < this.activePool.length - 1) {
+                    audio.playClick();
+                    this.currentIndex++;
+                    this.loadFlashcard();
+                } else {
+                    this.currentIndex = 0;
+                    this.loadFlashcard();
+                }
+            }
+
+            speakCurrentWord() {
+                if ('speechSynthesis' in window) {
+                    const currentItem = this.activePool[this.currentIndex];
+                    if (!currentItem) return;
+                    const utterance = new SpeechSynthesisUtterance(currentItem.en_word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.cancel(); // stop current sound
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            showResults() {
+                this.hideAllScreens();
+                document.getElementById('screen-result').classList.remove('hidden');
+
+                const accuracy = this.totalAttempted > 0 
+                    ? Math.round((this.correctCount / this.totalAttempted) * 100) 
+                    : 100;
+
+                document.getElementById('res-score').innerText = this.score;
+                document.getElementById('res-accuracy').innerText = `${accuracy}%`;
+                document.getElementById('res-combo').innerText = `${this.maxStreak}x`;
+                document.getElementById('res-words').innerText = this.correctCount;
+
+                // Fire Confetti if high score/accuracy
+                if (accuracy >= 70 && typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+            }
+
+            retryCurrentMode() {
+                if (this.currentMode === 'quiz') this.startQuizMode();
+                else if (this.currentMode === 'type') this.startTypeMode();
+                else this.startFlashcardMode();
+            }
+        }
+
+        // Initialize Game Instance on Page Load
+        let game;
+        window.onload = () => {
+            game = new ITVocabGame();
+            game.init();
+        };
+    </script>
+</body>
+</html>

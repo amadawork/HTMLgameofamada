@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber High Adventure - Petualangan Istilah Komputer SMA</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Pixel Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fira+Code:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        pixel: ['"Press Start 2P"', 'cursive'],
+                        mono: ['"Fira Code"', 'monospace'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sma: {
+                            shirt: '#ffffff',
+                            pants: '#718096',
+                            tie: '#3182ce'
+                        },
+                        cyber: {
+                            dark: '#0a0d18',
+                            panel: '#151c2e',
+                            neon: '#00f0ff',
+                            gold: '#ffd700',
+                            accent: '#ff2a6d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #060913;
+            color: #f8fafc;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            background-color: #0c1021;
+        }
+
+        .pixel-border {
+            box-shadow: 
+                0 -4px 0 0 #000,
+                0 4px 0 0 #000,
+                -4px 0 0 0 #000,
+                4px 0 0 0 #000;
+        }
+
+        .pixel-btn {
+            position: relative;
+            box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: inset 2px 2px 0px 0px rgba(0,0,0,0.4);
+        }
+
+        .glass-card {
+            background: rgba(21, 28, 46, 0.88);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(0,240,255,0.6)); }
+            50% { filter: drop-shadow(0 0 16px rgba(0,240,255,0.9)); }
+        }
+
+        .glow-effect {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between items-center overflow-hidden bg-slate-950 text-white">
+
+    <!-- Top HUD Header -->
+    <header id="game-hud" class="fixed top-0 left-0 right-0 z-20 p-3 pointer-events-none flex justify-between items-center">
+        <!-- Left: Player Stats -->
+        <div class="flex items-center space-x-3 pointer-events-auto">
+            <div class="glass-card px-3 py-1.5 rounded-xl flex items-center space-x-2">
+                <i class="fa-solid fa-heart text-rose-500 text-lg"></i>
+                <div id="hud-lives" class="flex space-x-1">
+                    <span class="w-3 h-4 bg-rose-500 rounded-xs"></span>
+                    <span class="w-3 h-4 bg-rose-500 rounded-xs"></span>
+                    <span class="w-3 h-4 bg-rose-500 rounded-xs"></span>
+                </div>
+            </div>
+
+            <div class="glass-card px-3 py-1.5 rounded-xl font-pixel text-xs text-amber-400 flex items-center space-x-2">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span id="hud-coins">0</span>
+            </div>
+        </div>
+
+        <!-- Center: Current Level Indicator -->
+        <div class="glass-card px-4 py-1.5 rounded-xl text-center pointer-events-auto">
+            <div class="text-[10px] font-mono text-cyan-400 uppercase tracking-widest" id="hud-level-title">LEVEL 1</div>
+            <div class="text-xs font-bold font-pixel text-white" id="hud-level-name">Lab Komputer Sekolah</div>
+        </div>
+
+        <!-- Right: Controls & Score -->
+        <div class="flex items-center space-x-2 pointer-events-auto">
+            <div class="glass-card px-3 py-1.5 rounded-xl font-mono text-xs hidden sm:block">
+                <span class="text-slate-400">SKOR:</span>
+                <span id="hud-score" class="text-cyan-300 font-bold font-pixel">0</span>
+            </div>
+
+            <button onclick="game.openDictionary()" class="glass-card w-10 h-10 rounded-xl flex items-center justify-center text-cyan-400 hover:text-white transition" title="Kamus Istilah IT">
+                <i class="fa-solid fa-book-bookmark text-base"></i>
+            </button>
+            <button onclick="game.togglePause()" class="glass-card w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-white transition">
+                <i class="fa-solid fa-pause text-base"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Canvas Game Viewport -->
+    <div id="canvas-container" class="relative w-full h-full flex-grow flex items-center justify-center overflow-hidden">
+        <canvas id="gameCanvas" class="w-full h-full"></canvas>
+
+        <!-- Touch Controls for Mobile -->
+        <div id="mobile-controls" class="absolute bottom-4 left-0 right-0 z-10 px-6 flex justify-between items-center pointer-events-none md:hidden">
+            <!-- D-Pad Left/Right -->
+            <div class="flex space-x-3 pointer-events-auto">
+                <button id="btn-touch-left" class="w-14 h-14 rounded-2xl bg-slate-800/90 border-2 border-cyan-500/50 text-cyan-300 text-2xl flex items-center justify-center active:bg-cyan-500 active:text-white transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button id="btn-touch-right" class="w-14 h-14 rounded-2xl bg-slate-800/90 border-2 border-cyan-500/50 text-cyan-300 text-2xl flex items-center justify-center active:bg-cyan-500 active:text-white transition">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            
+            <!-- Action Buttons: Jump & Interact -->
+            <div class="flex space-x-3 pointer-events-auto">
+                <button id="btn-touch-interact" class="w-12 h-12 rounded-full bg-amber-600/90 border-2 border-amber-400 text-white text-lg flex items-center justify-center active:bg-amber-500 transition">
+                    <i class="fa-solid fa-terminal"></i>
+                </button>
+                <button id="btn-touch-jump" class="w-16 h-16 rounded-full bg-cyan-600/90 border-2 border-cyan-400 text-white text-2xl flex items-center justify-center active:bg-cyan-500 active:scale-95 transition shadow-lg shadow-cyan-500/40">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1: Main Menu & Level Select -->
+    <div id="modal-start" class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="glass-card max-w-xl w-full p-6 sm:p-8 rounded-3xl border border-cyan-500/40 text-center space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-rose-500 flex items-center justify-center text-white text-3xl shadow-lg glow-effect">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+
+            <div>
+                <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold border border-cyan-500/30 uppercase tracking-widest">
+                    Edu-Platformer Adventure
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-pixel mt-3 text-cyan-300 tracking-tight leading-relaxed">
+                    CYBER HIGH ADVENTURE
+                </h1>
+                <p class="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
+                    Bantu karakter <strong class="text-amber-300">Siswa SMA</strong> berpetualang menelusuri 10 level dunia komputer, mengumpulkan Byte Coins, dan menyelesaikan kuis istilah IT!
+                </p>
+            </div>
+
+            <!-- Level Selector Grid -->
+            <div class="text-left space-y-2">
+                <label class="block text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                    <i class="fa-solid fa-map-location-dot mr-1"></i> Pilih Level Permainan (1 - 10):
+                </label>
+                <div id="level-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs">
+                    <!-- Dynamic Level Buttons populated by JS -->
+                </div>
+            </div>
+
+            <!-- Controls Info -->
+            <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 text-slate-300 text-xs font-mono grid grid-cols-2 gap-2 text-left">
+                <div><i class="fa-solid fa-keyboard text-cyan-400 mr-1"></i> <strong>A / D / Panah</strong>: Jalan</div>
+                <div><i class="fa-solid fa-arrow-up text-cyan-400 mr-1"></i> <strong>W / Space</strong>: Lompat</div>
+                <div><i class="fa-solid fa-hand text-amber-400 mr-1"></i> <strong>E / Sentuh</strong>: Terminal IT</div>
+                <div><i class="fa-solid fa-heart text-rose-400 mr-1"></i> <strong>3 Nyawa</strong> / Level</div>
+            </div>
+
+            <button onclick="game.startSelectedLevel()" class="w-full bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white py-4 rounded-2xl font-pixel text-sm tracking-wider transition pixel-btn shadow-lg shadow-cyan-500/30">
+                MULAI PETUALANGAN <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal 2: Interactive IT Quiz Terminal -->
+    <div id="modal-quiz" class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="glass-card max-w-lg w-full p-6 rounded-3xl border-2 border-cyan-400 text-center space-y-5 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold">
+                    <i class="fa-solid fa-terminal mr-1"></i> TERMINAL DATA IT
+                </span>
+                <span id="quiz-level-tag" class="text-[10px] font-pixel text-amber-400 bg-amber-400/10 px-2 py-1 rounded">
+                    CHECKPOINT
+                </span>
+            </div>
+
+            <div class="space-y-2">
+                <div class="text-slate-400 text-xs font-mono">Apa istilah bahasa Inggris dari kata berikut:</div>
+                <div id="quiz-question" class="text-xl sm:text-2xl font-extrabold font-mono text-cyan-300 bg-slate-900/80 py-3 px-4 rounded-2xl border border-cyan-500/40">
+                    "PERANGKAT KERAS"
+                </div>
+                <p id="quiz-hint" class="text-[11px] text-slate-400 italic">Petunjuk: Bagian fisik komputer yang dapat disentuh.</p>
+            </div>
+
+            <!-- Quiz Options Grid -->
+            <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono text-xs sm:text-sm">
+                <!-- Dynamically Generated Buttons -->
+            </div>
+
+            <div id="quiz-feedback" class="hidden py-2 rounded-xl text-xs font-mono font-bold"></div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Level Complete / Game Over Result -->
+    <div id="modal-result" class="fixed inset-0 z-30 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="glass-card max-w-md w-full p-6 sm:p-8 rounded-3xl border border-slate-700 text-center space-y-6 shadow-2xl">
+            <div id="res-icon" class="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center text-3xl shadow-lg glow-effect">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <div>
+                <h2 id="res-title" class="text-2xl font-pixel text-white">LEVEL SELESAI!</h2>
+                <p id="res-subtitle" class="text-slate-300 text-xs sm:text-sm mt-1">Kamu berhasil menaklukkan tantangan komputer ini!</p>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-3 gap-2 font-mono text-center">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block">BINTANG</span>
+                    <div id="res-stars" class="text-amber-400 text-sm mt-0.5">⭐⭐⭐</div>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block">BYTE COINS</span>
+                    <span id="res-coins" class="text-lg font-bold text-amber-400 font-pixel">0</span>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block">KUIS IT</span>
+                    <span id="res-quizzes" class="text-lg font-bold text-cyan-400 font-pixel">0/0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btn-next-level" onclick="game.nextLevel()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-3.5 rounded-xl font-pixel text-xs transition pixel-btn">
+                    LEVEL SELANJUTNYA <i class="fa-solid fa-forward ml-1"></i>
+                </button>
+                <button onclick="game.showHomeModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-3.5 rounded-xl border border-slate-700 font-pixel text-xs transition">
+                    MENU LEVEL <i class="fa-solid fa-list ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Dictionary / Glossary -->
+    <div id="modal-dict" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="glass-card max-w-2xl w-full p-6 rounded-3xl border border-cyan-500/40 text-left space-y-4 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-pixel text-cyan-300 flex items-center">
+                    <i class="fa-solid fa-book-bookmark text-amber-400 mr-2"></i> KAMUS ISTILAH IT SMA
+                </h3>
+                <button onclick="game.closeDictionary()" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="dict-list" class="overflow-y-auto space-y-3 flex-grow pr-1 font-mono text-xs">
+                <!-- Populated dynamically -->
+            </div>
+
+            <button onclick="game.closeDictionary()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl font-pixel text-xs transition">
+                TUTUP KAMUS
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Web Audio Synth for 8-Bit Retro Game Sound FX
+         */
+        class RetroSoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+
+            playJump() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playCoin() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+                osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playHit() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.2);
+
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+
+            playCorrect() {
+                this.init();
+                if (!this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.08);
+                    osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
+                });
+            }
+
+            playWin() {
+                this.init();
+                if (!this.ctx) return;
+                const melody = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+                melody.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.1 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + i * 0.1);
+                    osc.stop(this.ctx.currentTime + i * 0.1 + 0.25);
+                });
+            }
+        }
+
+        const sound = new RetroSoundEngine();
+    </script>
+
+    <script>
+        const IT_LEVELS_DATA = [
+            {
+                level: 1,
+                title: "Lab Komputer Sekolah",
+                theme: "Dasar Perangkat Keras",
+                bgColor: "#0c1021",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Perangkat Keras", en_word: "Hardware", hint: "Bagian fisik sistem komputer.", options: ["Hardware", "Software", "Brainware", "Firmware"] },
+                    { id_word: "Papan Ketik", en_word: "Keyboard", hint: "Perangkat masukan teks dan tombol angka.", options: ["Keyboard", "Mouse", "Monitor", "Printer"] },
+                    { id_word: "Tetikus", en_word: "Mouse", hint: "Perangkat penunjuk kursor di layar.", options: ["Mouse", "Screen", "Modem", "Scanner"] }
+                ]
+            },
+            {
+                level: 2,
+                title: "Lorong Perangkat Luar",
+                theme: "Aksesoris & Output",
+                bgColor: "#091428",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Pencetak Berkas", en_word: "Printer", hint: "Mencetak dokumen ke media kertas.", options: ["Printer", "Plotter", "Scanner", "Monitor"] },
+                    { id_word: "Penyimpanan Luar", en_word: "External Drive", hint: "Penyimpan data portabel di luar PC.", options: ["External Drive", "Cloud", "RAM", "Cache"] },
+                    { id_word: "Layar Tampilan", en_word: "Monitor", hint: "Menampilkan antarmuka visual.", options: ["Monitor", "Speaker", "Webcam", "CPU"] }
+                ]
+            },
+            {
+                level: 3,
+                title: "Dunia Sistem Operasi",
+                theme: "Istilah OS & Sistem",
+                bgColor: "#13092b",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Mulai Ulang", en_word: "Reboot", hint: "Memuat ulang seluruh sistem komputer.", options: ["Reboot", "Shutdown", "Hibernate", "Standby"] },
+                    { id_word: "Antarmuka Pengguna", en_word: "User Interface", hint: "Tampilan visual interaksi pengguna.", options: ["User Interface", "Backend", "Compiler", "Driver"] },
+                    { id_word: "Perangkat Lunak", en_word: "Software", hint: "Program dan instruksi sistem.", options: ["Software", "Hardware", "Middleware", "Freeware"] }
+                ]
+            },
+            {
+                level: 4,
+                title: "Lembah Perangkat Lunak",
+                theme: "Aplikasi & Berkas",
+                bgColor: "#09221d",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Peramban Web", en_word: "Web Browser", hint: "Aplikasi menjelajah situs internet.", options: ["Web Browser", "Search Engine", "Web Server", "Firewall"] },
+                    { id_word: "Unduh Berkas", en_word: "Download", hint: "Mengambil data dari internet ke lokal.", options: ["Download", "Upload", "Stream", "Export"] },
+                    { id_word: "Kerusakan Kode", en_word: "Bug", hint: "Cacat atau kesalahan pada kode program.", options: ["Bug", "Patch", "Update", "Feature"] }
+                ]
+            },
+            {
+                level: 5,
+                title: "Jembatan Jaringan Data",
+                theme: "Jaringan Komputer",
+                bgColor: "#241808",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Alamat Protokol Internet", en_word: "IP Address", hint: "Identitas numerik perangkat dalam jaringan.", options: ["IP Address", "MAC Address", "DNS", "URL"] },
+                    { id_word: "Koneksi Nirkabel", en_word: "Wireless", hint: "Koneksi tanpa kabel fisik.", options: ["Wireless", "Ethernet", "Fiber", "Coaxial"] },
+                    { id_word: "Tautan Halaman", en_word: "Hyperlink", hint: "Tautan yang menghubungkan antarhalaman.", options: ["Hyperlink", "Domain", "Protocol", "Cookie"] }
+                ]
+            },
+            {
+                level: 6,
+                title: "Labirin Keamanan Siber",
+                theme: "Cyber Security",
+                bgColor: "#280816",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Dinding Pelindung", en_word: "Firewall", hint: "Penyaring lalu lintas jaringan keamanan.", options: ["Firewall", "Antivirus", "Encryption", "VPN"] },
+                    { id_word: "Pengodean Rahasia", en_word: "Encryption", hint: "Prosedur menyandikan data rahasia.", options: ["Encryption", "Decryption", "Hashing", "Encoding"] },
+                    { id_word: "Peretas Sistem", en_word: "Hacker", hint: "Orang yang menembus benteng sistem.", options: ["Hacker", "Cracker", "Admin", "User"] }
+                ]
+            },
+            {
+                level: 7,
+                title: "Awan Data (Cloud Platform)",
+                theme: "Cloud & Infrastructure",
+                bgColor: "#082128",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Penyimpanan Awan", en_word: "Cloud Storage", hint: "Penyimpanan berkas di server internet.", options: ["Cloud Storage", "Local Drive", "Flashdisk", "ROM"] },
+                    { id_word: "Peladen Pusat", en_word: "Server", hint: "Komputer penyedia layanan data.", options: ["Server", "Client", "Router", "Switch"] },
+                    { id_word: "Penyelarasan Data", en_word: "Sync", hint: "Menyamakan data antarperangkat.", options: ["Sync", "Backup", "Restore", "Format"] }
+                ]
+            },
+            {
+                level: 8,
+                title: "Candi Algoritma",
+                theme: "Pemrograman & Data",
+                bgColor: "#1b0928",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Kode Sumber", en_word: "Source Code", hint: "Kumpulan instruksi teks program.", options: ["Source Code", "Binary", "Bytecode", "Script"] },
+                    { id_word: "Basis Data", en_word: "Database", hint: "Tempat terstruktur menyimpan data.", options: ["Database", "Data Structure", "Array", "Variable"] },
+                    { id_word: "Perbaikan Program", en_word: "Debugging", hint: "Proses melacak dan memperbaiki bug.", options: ["Debugging", "Compiling", "Deploying", "Refactoring"] }
+                ]
+            },
+            {
+                level: 9,
+                title: "Menara Kecerdasan Buatan",
+                theme: "AI & Machine Learning",
+                bgColor: "#09281a",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Kecerdasan Buatan", en_word: "Artificial Intelligence", hint: "Simulasi kecerdasan manusia oleh mesin.", options: ["Artificial Intelligence", "Virtual Reality", "Robotics", "Automation"] },
+                    { id_word: "Pembelajaran Mesin", en_word: "Machine Learning", hint: "Sistem yang belajar dari data.", options: ["Machine Learning", "Deep Learning", "Neural Network", "Data Mining"] },
+                    { id_word: "Petunjuk Teks AI", en_word: "Prompt", hint: "Instruksi input untuk kecerdasan generator.", options: ["Prompt", "Command", "Query", "Parameter"] }
+                ]
+            },
+            {
+                level: 10,
+                title: "Benteng Master Cyber",
+                theme: "Tantangan Komprehensif",
+                bgColor: "#230b0b",
+                tileSize: 32,
+                vocabulary: [
+                    { id_word: "Keamanan Siber", en_word: "Cybersecurity", hint: "Perlindungan sistem dari serangan digital.", options: ["Cybersecurity", "Cybercrime", "Cybernetics", "Network Security"] },
+                    { id_word: "Pengembang Aplikasi", en_word: "Developer", hint: "Pembuat aplikasi dan sistem program.", options: ["Developer", "Engineer", "Architect", "Designer"] },
+                    { id_word: "Otomatisasi Sistem", en_word: "Automation", hint: "Menjalankan tugas secara otomatis.", options: ["Automation", "Integration", "Virtualization", "Computation"] }
+                ]
+            }
+        ];
+    </script>
+
+    <script>
+        /**
+         * Main Platformer Game Engine
+         */
+        class CyberAdventureGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.currentLevelIdx = 0;
+                this.unlockedLevels = parseInt(localStorage.getItem('cyber_unlocked_level') || '1');
+                this.levelStars = JSON.parse(localStorage.getItem('cyber_level_stars') || '{}');
+
+                this.isPaused = false;
+                this.isRunning = false;
+                this.inQuizMode = false;
+
+                // Stats
+                this.score = 0;
+                this.coins = 0;
+                this.lives = 3;
+                this.quizzesPassed = 0;
+                this.totalQuizzesInLevel = 0;
+
+                // Controls Input
+                this.keys = { left: false, right: false, jump: false, interact: false };
+                this.touch = { left: false, right: false, jump: false, interact: false };
+
+                // Player Physics State
+                this.player = {
+                    x: 60,
+                    y: 100,
+                    vx: 0,
+                    vy: 0,
+                    width: 24,
+                    height: 38,
+                    speed: 4.2,
+                    jumpForce: -11.5,
+                    grounded: false,
+                    facing: 'right', // 'left' or 'right'
+                    animTimer: 0,
+                    frame: 0,
+                    invincible: 0
+                };
+
+                // Camera
+                this.camera = { x: 0, y: 0 };
+
+                // Level entities
+                this.platforms = [];
+                this.coinsList = [];
+                this.terminals = [];
+                this.enemies = [];
+                this.spikes = [];
+                this.flag = null;
+
+                this.activeTerminal = null;
+
+                this.initEvents();
+            }
+
+            init() {
+                this.resizeCanvas();
+                this.renderLevelGrid();
+            }
+
+            resizeCanvas() {
+                const container = document.getElementById('canvas-container');
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+
+            renderLevelGrid() {
+                const grid = document.getElementById('level-grid');
+                grid.innerHTML = '';
+
+                for (let i = 1; i <= 10; i++) {
+                    const btn = document.createElement('button');
+                    const isUnlocked = i <= this.unlockedLevels;
+                    const stars = this.levelStars[i] || 0;
+                    
+                    let starStr = '☆☆☆';
+                    if (stars === 1) starStr = '★☆☆';
+                    if (stars === 2) starStr = '★★☆';
+                    if (stars === 3) starStr = '★★★';
+
+                    btn.className = `p-2.5 rounded-xl border flex flex-col items-center justify-center transition pixel-btn ${
+                        i - 1 === this.currentLevelIdx && isUnlocked
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-300 font-bold'
+                            : isUnlocked 
+                                ? 'bg-slate-800 border-slate-700 text-cyan-300 hover:border-cyan-500' 
+                                : 'bg-slate-900 border-slate-850 text-slate-600 cursor-not-allowed'
+                    }`;
+
+                    btn.innerHTML = `
+                        <span class="text-xs font-pixel">LV ${i}</span>
+                        <span class="text-[9px] text-amber-400 mt-0.5">${isUnlocked ? starStr : '<i class="fa-solid fa-lock"></i>'}</span>
+                    `;
+
+                    if (isUnlocked) {
+                        btn.onclick = () => {
+                            this.currentLevelIdx = i - 1;
+                            this.renderLevelGrid();
+                        };
+                    }
+
+                    grid.appendChild(btn);
+                }
+            }
+
+            initEvents() {
+                window.addEventListener('resize', () => this.resizeCanvas());
+
+                // Keyboard listener
+                window.addEventListener('keydown', (e) => {
+                    if (this.inQuizMode) return;
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = true;
+                    if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = true;
+                    if (e.code === 'KeyW' || e.code === 'Space' || e.code === 'ArrowUp') {
+                        if (!this.keys.jump && this.player.grounded) {
+                            this.player.vy = this.player.jumpForce;
+                            this.player.grounded = false;
+                            sound.playJump();
+                        }
+                        this.keys.jump = true;
+                        e.preventDefault();
+                    }
+                    if (e.code === 'KeyE') {
+                        this.interactWithTerminal();
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = false;
+                    if (e.code === 'KeyD' || e.code === 'ArrowRight') this.keys.right = false;
+                    if (e.code === 'KeyW' || e.code === 'Space' || e.code === 'ArrowUp') this.keys.jump = false;
+                });
+
+                // Touch mobile buttons setup
+                const setupTouch = (id, keyName) => {
+                    const btn = document.getElementById(id);
+                    if (!btn) return;
+                    btn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (keyName === 'jump') {
+                            if (this.player.grounded) {
+                                this.player.vy = this.player.jumpForce;
+                                this.player.grounded = false;
+                                sound.playJump();
+                            }
+                        } else if (keyName === 'interact') {
+                            this.interactWithTerminal();
+                        } else {
+                            this.touch[keyName] = true;
+                        }
+                    });
+                    btn.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        if (keyName !== 'jump' && keyName !== 'interact') {
+                            this.touch[keyName] = false;
+                        }
+                    });
+                };
+
+                setupTouch('btn-touch-left', 'left');
+                setupTouch('btn-touch-right', 'right');
+                setupTouch('btn-touch-jump', 'jump');
+                setupTouch('btn-touch-interact', 'interact');
+            }
+
+            startSelectedLevel() {
+                document.getElementById('modal-start').classList.add('hidden');
+                document.getElementById('modal-result').classList.add('hidden');
+                this.loadLevel(this.currentLevelIdx);
+            }
+
+            loadLevel(idx) {
+                const levelData = IT_LEVELS_DATA[idx];
+                this.currentLevelIdx = idx;
+                this.lives = 3;
+                this.coins = 0;
+                this.quizzesPassed = 0;
+                this.totalQuizzesInLevel = levelData.vocabulary.length;
+                this.isPaused = false;
+                this.isRunning = true;
+                this.inQuizMode = false;
+
+                // Update HUD
+                document.getElementById('hud-level-title').innerText = `LEVEL ${levelData.level}`;
+                document.getElementById('hud-level-name').innerText = levelData.title;
+                this.updateHUD();
+
+                // Player spawn
+                this.player.x = 80;
+                this.player.y = 100;
+                this.player.vx = 0;
+                this.player.vy = 0;
+                this.player.grounded = false;
+                this.player.invincible = 0;
+
+                // Build Tilemap & Entities based on level index (10 procedural levels)
+                this.generateLevelMap(idx);
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            generateLevelMap(levelIdx) {
+                this.platforms = [];
+                this.coinsList = [];
+                this.terminals = [];
+                this.enemies = [];
+                this.spikes = [];
+
+                const mapWidth = 2400 + (levelIdx * 300); // Expanding map per level
+                const groundY = 480;
+
+                // Ground Sections with pits for higher levels
+                let currentX = 0;
+                while (currentX < mapWidth) {
+                    const pitWidth = (levelIdx > 1 && Math.random() < 0.35) ? (80 + Math.random() * 60) : 0;
+                    const segmentWidth = 250 + Math.random() * 200;
+
+                    if (pitWidth > 0 && currentX > 200 && currentX < mapWidth - 300) {
+                        // Pit created, add bottom spikes
+                        this.spikes.push({
+                            x: currentX,
+                            y: groundY + 20,
+                            width: pitWidth,
+                            height: 20
+                        });
+                        currentX += pitWidth;
+                    }
+
+                    this.platforms.push({
+                        x: currentX,
+                        y: groundY,
+                        width: segmentWidth,
+                        height: 80,
+                        type: 'ground'
+                    });
+
+                    // Add Byte Coins along ground
+                    for (let c = 30; c < segmentWidth - 30; c += 45) {
+                        this.coinsList.push({ x: currentX + c, y: groundY - 30, collected: false });
+                    }
+
+                    currentX += segmentWidth;
+                }
+
+                // Add Floating Platforms & Obstacles
+                const platformCount = 12 + (levelIdx * 3);
+                for (let i = 0; i < platformCount; i++) {
+                    const px = 220 + (i * (mapWidth / platformCount)) + (Math.random() * 60 - 30);
+                    const py = groundY - 80 - (Math.random() * 160);
+                    const pw = 90 + Math.random() * 60;
+
+                    this.platforms.push({
+                        x: px,
+                        y: py,
+                        width: pw,
+                        height: 20,
+                        type: 'platform'
+                    });
+
+                    // Add Coins on platform
+                    this.coinsList.push({ x: px + pw / 2, y: py - 28, collected: false });
+
+                    // Add Moving Enemy Bug on later levels
+                    if (levelIdx >= 2 && i % 2 === 1 && px < mapWidth - 400) {
+                        this.enemies.push({
+                            x: px + 10,
+                            y: py - 24,
+                            width: 24,
+                            height: 24,
+                            vx: 1.2 + (levelIdx * 0.2),
+                            minX: px,
+                            maxX: px + pw - 24,
+                            type: 'bug'
+                        });
+                    }
+                }
+
+                // Place Vocab Checkpoint Terminals evenly throughout level
+                const vocabList = IT_LEVELS_DATA[levelIdx].vocabulary;
+                const stepX = (mapWidth - 500) / vocabList.length;
+
+                vocabList.forEach((vocabItem, vIdx) => {
+                    const tx = 350 + (vIdx * stepX);
+                    const ty = groundY - 45;
+
+                    // Ensure solid floor under terminal
+                    this.platforms.push({
+                        x: tx - 30,
+                        y: groundY,
+                        width: 100,
+                        height: 80,
+                        type: 'ground'
+                    });
+
+                    this.terminals.push({
+                        x: tx,
+                        y: ty,
+                        width: 36,
+                        height: 45,
+                        data: vocabItem,
+                        completed: false
+                    });
+                });
+
+                // End Flag / Cyber Core Portal
+                this.flag = {
+                    x: mapWidth - 120,
+                    y: groundY - 90,
+                    width: 40,
+                    height: 90
+                };
+
+                // Solid ground under flag
+                this.platforms.push({
+                    x: mapWidth - 200,
+                    y: groundY,
+                    width: 250,
+                    height: 80,
+                    type: 'ground'
+                });
+            }
+
+            update() {
+                if (this.isPaused || !this.isRunning || this.inQuizMode) return;
+
+                // Player Movement Mechanics
+                const moveLeft = this.keys.left || this.touch.left;
+                const moveRight = this.keys.right || this.touch.right;
+
+                if (moveLeft) {
+                    this.player.vx = -this.player.speed;
+                    this.player.facing = 'left';
+                } else if (moveRight) {
+                    this.player.vx = this.player.speed;
+                    this.player.facing = 'right';
+                } else {
+                    this.player.vx *= 0.7; // Friction
+                }
+
+                // Gravity
+                this.player.vy += 0.58;
+
+                // Max Fall speed
+                if (this.player.vy > 12) this.player.vy = 12;
+
+                // Invincibility cooldown
+                if (this.player.invincible > 0) this.player.invincible--;
+
+                // Horizontal Collision
+                this.player.x += this.player.vx;
+                this.checkHorizontalCollisions();
+
+                // Vertical Collision
+                this.player.y += this.player.vy;
+                this.player.grounded = false;
+                this.checkVerticalCollisions();
+
+                // Animation frame counter
+                if (Math.abs(this.player.vx) > 0.5) {
+                    this.player.animTimer++;
+                    if (this.player.animTimer % 8 === 0) {
+                        this.player.frame = (this.player.frame + 1) % 4;
+                    }
+                } else {
+                    this.player.frame = 0;
+                }
+
+                // Check Coin Pickup
+                this.coinsList.forEach(c => {
+                    if (!c.collected && Math.hypot((this.player.x + 12) - c.x, (this.player.y + 19) - c.y) < 22) {
+                        c.collected = true;
+                        this.coins++;
+                        this.score += 20;
+                        sound.playCoin();
+                        this.updateHUD();
+                    }
+                });
+
+                // Check Enemy Collision
+                this.enemies.forEach(e => {
+                    // Patrol movement
+                    e.x += e.vx;
+                    if (e.x <= e.minX || e.x >= e.maxX) e.vx *= -1;
+
+                    // Hit test with player
+                    if (this.player.invincible <= 0 &&
+                        this.player.x < e.x + e.width &&
+                        this.player.x + this.player.width > e.x &&
+                        this.player.y < e.y + e.height &&
+                        this.player.y + this.player.height > e.y) {
+                        
+                        // Jump stomp attack on enemy
+                        if (this.player.vy > 0 && (this.player.y + this.player.height - this.player.vy) <= e.y + 10) {
+                            sound.playCoin();
+                            this.player.vy = -8;
+                            e.x = -999; // Destroy enemy
+                            this.score += 100;
+                        } else {
+                            this.takeDamage();
+                        }
+                    }
+                });
+
+                // Check Spike hazard
+                this.spikes.forEach(s => {
+                    if (this.player.x < s.x + s.width &&
+                        this.player.x + this.player.width > s.x &&
+                        this.player.y + this.player.height > s.y) {
+                        this.takeDamage();
+                        this.player.y = s.y - 60; // Bounce up
+                        this.player.vy = -8;
+                    }
+                });
+
+                // Out of screen bottom pit check
+                if (this.player.y > 600) {
+                    this.takeDamage();
+                    this.player.x = Math.max(60, this.player.x - 150);
+                    this.player.y = 100;
+                    this.player.vy = 0;
+                }
+
+                // Check End Level Flag Portal
+                if (this.flag &&
+                    this.player.x < this.flag.x + this.flag.width &&
+                    this.player.x + this.player.width > this.flag.x &&
+                    this.player.y < this.flag.y + this.flag.height &&
+                    this.player.y + this.player.height > this.flag.y) {
+                    
+                    this.completeLevel();
+                }
+
+                // Camera follow player smooth
+                const targetCamX = this.player.x - this.canvas.width / 3;
+                this.camera.x += (targetCamX - this.camera.x) * 0.1;
+                if (this.camera.x < 0) this.camera.x = 0;
+            }
+
+            checkHorizontalCollisions() {
+                this.platforms.forEach(p => {
+                    if (this.player.y + this.player.height > p.y && this.player.y < p.y + p.height) {
+                        if (this.player.vx > 0 && this.player.x + this.player.width > p.x && this.player.x < p.x) {
+                            this.player.x = p.x - this.player.width;
+                            this.player.vx = 0;
+                        } else if (this.player.vx < 0 && this.player.x < p.x + p.width && this.player.x + this.player.width > p.x + p.width) {
+                            this.player.x = p.x + p.width;
+                            this.player.vx = 0;
+                        }
+                    }
+                });
+            }
+
+            checkVerticalCollisions() {
+                this.platforms.forEach(p => {
+                    if (this.player.x + this.player.width > p.x && this.player.x < p.x + p.width) {
+                        if (this.player.vy >= 0 && this.player.y + this.player.height >= p.y && this.player.y < p.y) {
+                            this.player.y = p.y - this.player.height;
+                            this.player.vy = 0;
+                            this.player.grounded = true;
+                        } else if (this.player.vy < 0 && this.player.y <= p.y + p.height && this.player.y + this.player.height > p.y + p.height) {
+                            this.player.y = p.y + p.height;
+                            this.player.vy = 0;
+                        }
+                    }
+                });
+            }
+
+            interactWithTerminal() {
+                // Find nearby terminal
+                const nearby = this.terminals.find(t => 
+                    !t.completed && Math.abs((this.player.x + 12) - (t.x + 18)) < 45
+                );
+
+                if (nearby) {
+                    this.openQuizModal(nearby);
+                }
+            }
+
+            openQuizModal(terminal) {
+                this.activeTerminal = terminal;
+                this.inQuizMode = true;
+
+                const q = terminal.data;
+                document.getElementById('quiz-question').innerText = `"${q.id_word.toUpperCase()}"`;
+                document.getElementById('quiz-hint').innerText = `Petunjuk: ${q.hint}`;
+
+                const optsContainer = document.getElementById('quiz-options');
+                optsContainer.innerHTML = '';
+
+                const feedback = document.getElementById('quiz-feedback');
+                feedback.classList.add('hidden');
+
+                // Shuffle options
+                const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
+
+                shuffledOpts.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'py-3 px-4 rounded-xl bg-slate-800 hover:bg-cyan-600 border border-slate-700 text-cyan-200 hover:text-white font-bold transition text-left flex items-center justify-between';
+                    btn.innerHTML = `<span>${opt}</span> <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>`;
+                    
+                    btn.onclick = () => this.handleQuizAnswer(opt, q.en_word, btn);
+                    optsContainer.appendChild(btn);
+                });
+
+                document.getElementById('modal-quiz').classList.remove('hidden');
+            }
+
+            handleQuizAnswer(selected, correct, btnEl) {
+                const feedback = document.getElementById('quiz-feedback');
+                feedback.classList.remove('hidden');
+
+                if (selected === correct) {
+                    sound.playCorrect();
+                    btnEl.className = 'py-3 px-4 rounded-xl bg-emerald-600 text-white font-bold border border-emerald-400 text-left flex items-center justify-between';
+                    feedback.className = 'py-2 px-3 rounded-xl text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                    feedback.innerText = 'BENAR! Checkpoint Data Terbuka!';
+
+                    this.score += 200;
+                    this.quizzesPassed++;
+                    this.activeTerminal.completed = true;
+
+                    setTimeout(() => {
+                        document.getElementById('modal-quiz').classList.add('hidden');
+                        this.inQuizMode = false;
+                        this.updateHUD();
+                    }, 1200);
+                } else {
+                    sound.playHit();
+                    btnEl.className = 'py-3 px-4 rounded-xl bg-rose-600 text-white font-bold border border-rose-400 text-left flex items-center justify-between';
+                    feedback.className = 'py-2 px-3 rounded-xl text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40';
+                    feedback.innerText = 'KURANG TEPAT! Coba lagi.';
+                    this.takeDamage();
+                }
+            }
+
+            takeDamage() {
+                if (this.player.invincible > 0) return;
+                sound.playHit();
+                this.lives--;
+                this.player.invincible = 60; // 1 sec iframe
+                this.updateHUD();
+
+                if (this.lives <= 0) {
+                    this.showGameOver();
+                }
+            }
+
+            updateHUD() {
+                document.getElementById('hud-coins').innerText = this.coins;
+                document.getElementById('hud-score').innerText = this.score;
+
+                const livesContainer = document.getElementById('hud-lives');
+                livesContainer.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    const heart = document.createElement('span');
+                    heart.className = i < this.lives 
+                        ? 'w-3 h-4 bg-rose-500 rounded-xs shadow-sm shadow-rose-500' 
+                        : 'w-3 h-4 bg-slate-800 rounded-xs border border-slate-700';
+                    livesContainer.appendChild(heart);
+                }
+            }
+
+            completeLevel() {
+                this.isRunning = false;
+                sound.playWin();
+
+                // Save Unlocked Progress
+                if (this.currentLevelIdx + 1 >= this.unlockedLevels && this.unlockedLevels < 10) {
+                    this.unlockedLevels = this.currentLevelIdx + 2;
+                    localStorage.setItem('cyber_unlocked_level', this.unlockedLevels.toString());
+                }
+
+                // Calculate Star Rating
+                let stars = 1;
+                if (this.quizzesPassed >= this.totalQuizzesInLevel) stars++;
+                if (this.coins >= 5) stars++;
+
+                this.levelStars[this.currentLevelIdx + 1] = Math.max(this.levelStars[this.currentLevelIdx + 1] || 0, stars);
+                localStorage.setItem('cyber_level_stars', JSON.stringify(this.levelStars));
+
+                let starStr = '⭐☆☆';
+                if (stars === 2) starStr = '⭐⭐☆';
+                if (stars === 3) starStr = '⭐⭐⭐';
+
+                document.getElementById('res-icon').className = 'w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center text-3xl shadow-lg glow-effect';
+                document.getElementById('res-icon').innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                document.getElementById('res-title').innerText = "LEVEL SELESAI!";
+                document.getElementById('res-subtitle').innerText = "Hebat! Kamu berhasil menuntaskan misi IT ini!";
+
+                document.getElementById('res-stars').innerText = starStr;
+                document.getElementById('res-coins').innerText = this.coins;
+                document.getElementById('res-quizzes').innerText = `${this.quizzesPassed}/${this.totalQuizzesInLevel}`;
+
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+
+                document.getElementById('modal-result').classList.remove('hidden');
+                this.renderLevelGrid();
+            }
+
+            showGameOver() {
+                this.isRunning = false;
+                sound.playHit();
+
+                document.getElementById('res-icon').className = 'w-20 h-20 mx-auto rounded-full bg-rose-500/20 border-2 border-rose-400 text-rose-400 flex items-center justify-center text-3xl shadow-lg';
+                document.getElementById('res-icon').innerHTML = '<i class="fa-solid fa-skull"></i>';
+                document.getElementById('res-title').innerText = "GAGAL MISI";
+                document.getElementById('res-subtitle').innerText = "Kamu kehabisan nyawa! Pelajari lagi istilah komputer dan coba lagi.";
+
+                document.getElementById('res-stars').innerText = "☆☆☆";
+                document.getElementById('res-coins').innerText = this.coins;
+                document.getElementById('res-quizzes').innerText = `${this.quizzesPassed}/${this.totalQuizzesInLevel}`;
+
+                document.getElementById('btn-next-level').innerText = "ULANGI LEVEL";
+                document.getElementById('btn-next-level').onclick = () => this.startSelectedLevel();
+
+                document.getElementById('modal-result').classList.remove('hidden');
+            }
+
+            nextLevel() {
+                if (this.currentLevelIdx < 9) {
+                    this.currentLevelIdx++;
+                    this.startSelectedLevel();
+                } else {
+                    this.showHomeModal();
+                }
+            }
+
+            showHomeModal() {
+                this.isRunning = false;
+                document.getElementById('modal-result').classList.add('hidden');
+                document.getElementById('modal-start').classList.remove('hidden');
+                this.renderLevelGrid();
+            }
+
+            openDictionary() {
+                const dictList = document.getElementById('dict-list');
+                dictList.innerHTML = '';
+
+                IT_LEVELS_DATA.forEach(lvl => {
+                    const sec = document.createElement('div');
+                    sec.className = 'space-y-1.5';
+                    sec.innerHTML = `<div class="text-xs font-bold text-cyan-400 border-b border-slate-700 pb-1 font-pixel">LEVEL ${lvl.level}: ${lvl.title}</div>`;
+
+                    lvl.vocabulary.forEach(v => {
+                        const item = document.createElement('div');
+                        item.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center';
+                        item.innerHTML = `
+                            <div>
+                                <span class="text-white font-bold">${v.id_word}</span>
+                                <span class="text-slate-500 mx-1.5">➔</span>
+                                <span class="text-cyan-300 font-bold">${v.en_word}</span>
+                                <div class="text-[10px] text-slate-400 mt-0.5">${v.hint}</div>
+                            </div>
+                        `;
+                        sec.appendChild(item);
+                    });
+
+                    dictList.appendChild(sec);
+                });
+
+                document.getElementById('modal-dict').classList.remove('hidden');
+            }
+
+            closeDictionary() {
+                document.getElementById('modal-dict').classList.add('hidden');
+            }
+
+            togglePause() {
+                this.isPaused = !this.isPaused;
+            }
+
+            render() {
+                const lvl = IT_LEVELS_DATA[this.currentLevelIdx];
+                this.ctx.fillStyle = lvl.bgColor;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.ctx.save();
+                this.ctx.translate(-this.camera.x, 0);
+
+                // Render Platforms
+                this.platforms.forEach(p => {
+                    this.ctx.fillStyle = p.type === 'ground' ? '#1e293b' : '#334155';
+                    this.ctx.fillRect(p.x, p.y, p.width, p.height);
+
+                    // Top neon platform accent line
+                    this.ctx.fillStyle = '#00f0ff';
+                    this.ctx.fillRect(p.x, p.y, p.width, 3);
+                });
+
+                // Render Spikes
+                this.spikes.forEach(s => {
+                    this.ctx.fillStyle = '#f43f5e';
+                    for (let x = s.x; x < s.x + s.width; x += 12) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, s.y + s.height);
+                        this.ctx.lineTo(x + 6, s.y);
+                        this.ctx.lineTo(x + 12, s.y + s.height);
+                        this.ctx.fill();
+                    }
+                });
+
+                // Render Byte Coins
+                this.coinsList.forEach(c => {
+                    if (!c.collected) {
+                        this.ctx.fillStyle = '#f59e0b';
+                        this.ctx.beginPath();
+                        this.ctx.arc(c.x, c.y, 7, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.fillStyle = '#fef08a';
+                        this.ctx.fillRect(c.x - 2, c.y - 3, 4, 6);
+                    }
+                });
+
+                // Render Vocab Terminals
+                this.terminals.forEach(t => {
+                    this.ctx.fillStyle = t.completed ? '#10b981' : '#06b6d4';
+                    this.ctx.fillRect(t.x, t.y, t.width, t.height);
+
+                    // Screen
+                    this.ctx.fillStyle = '#0f172a';
+                    this.ctx.fillRect(t.x + 4, t.y + 5, t.width - 8, 20);
+
+                    // Text prompt floating
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = '9px "Press Start 2P"';
+                    this.ctx.textAlign = 'center';
+                    if (!t.completed) {
+                        this.ctx.fillText('[E]', t.x + t.width / 2, t.y - 10);
+                    } else {
+                        this.ctx.fillText('✓', t.x + t.width / 2, t.y - 10);
+                    }
+                });
+
+                // Render Enemies (Cyber Bugs)
+                this.enemies.forEach(e => {
+                    if (e.x > -100) {
+                        this.ctx.fillStyle = '#a855f7';
+                        this.ctx.fillRect(e.x, e.y, e.width, e.height);
+                        // Bug eyes
+                        this.ctx.fillStyle = '#000000';
+                        this.ctx.fillRect(e.x + 4, e.y + 4, 4, 4);
+                        this.ctx.fillRect(e.x + 16, e.y + 4, 4, 4);
+                    }
+                });
+
+                // Render End Portal Flag
+                if (this.flag) {
+                    this.ctx.fillStyle = '#10b981';
+                    this.ctx.fillRect(this.flag.x, this.flag.y, 6, this.flag.height);
+                    // Glowing Flag
+                    this.ctx.fillStyle = '#34d399';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.flag.x + 6, this.flag.y);
+                    this.ctx.lineTo(this.flag.x + 36, this.flag.y + 18);
+                    this.ctx.lineTo(this.flag.x + 6, this.flag.y + 36);
+                    this.ctx.fill();
+                }
+
+                // Render Pixel Art Character: Indonesian High School Student (Siswa SMA)
+                this.drawSMAStudent();
+
+                this.ctx.restore();
+            }
+
+            drawSMAStudent() {
+                const p = this.player;
+                if (p.invincible % 4 >= 2) return; // Flash effect when hurt
+
+                this.ctx.save();
+                this.ctx.translate(p.x, p.y);
+
+                const isLeft = p.facing === 'left';
+                if (isLeft) {
+                    this.ctx.scale(-1, 1);
+                    this.ctx.translate(-p.width, 0);
+                }
+
+                // Head / Hair (Black Pixel Hair)
+                this.ctx.fillStyle = '#1e1b18';
+                this.ctx.fillRect(4, 0, 16, 10);
+
+                // Face (Skin Tone)
+                this.ctx.fillStyle = '#f6d3bd';
+                this.ctx.fillRect(6, 6, 12, 8);
+
+                // Eyes
+                this.ctx.fillStyle = '#0f172a';
+                this.ctx.fillRect(14, 8, 2, 3);
+
+                // SMA White Shirt Body
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(5, 14, 14, 12);
+
+                // Blue SMA Tie
+                this.ctx.fillStyle = '#2563eb';
+                this.ctx.fillRect(11, 14, 2, 8);
+
+                // Backpack (Dark Blue)
+                this.ctx.fillStyle = '#1e293b';
+                this.ctx.fillRect(1, 15, 4, 10);
+
+                // Grey SMA Trousers / Pants
+                this.ctx.fillStyle = '#64748b';
+
+                // Walking Animation Legs
+                if (Math.abs(p.vx) > 0.5 && !p.grounded === false) {
+                    const legOffset = (p.frame % 2 === 0) ? 3 : -3;
+                    this.ctx.fillRect(6, 26, 5, 8);
+                    this.ctx.fillRect(13, 26, 5, 8);
+                    // Shoes
+                    this.ctx.fillStyle = '#0f172a';
+                    this.ctx.fillRect(5 + legOffset, 34, 6, 4);
+                    this.ctx.fillRect(12 - legOffset, 34, 6, 4);
+                } else {
+                    // Standing
+                    this.ctx.fillRect(6, 26, 5, 9);
+                    this.ctx.fillRect(13, 26, 5, 9);
+                    // Shoes
+                    this.ctx.fillStyle = '#0f172a';
+                    this.ctx.fillRect(5, 34, 6, 4);
+                    this.ctx.fillRect(13, 34, 6, 4);
+                }
+
+                this.ctx.restore();
+            }
+
+            gameLoop() {
+                if (!this.isRunning) return;
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        let game;
+        window.onload = () => {
+            game = new CyberAdventureGame();
+            game.init();
+        };
+    </script>
+</body>
+</html>
